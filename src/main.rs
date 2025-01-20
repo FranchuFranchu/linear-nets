@@ -1,7 +1,12 @@
 #![feature(let_chains)]
 
+use crate::util::join_with;
+use std::collections::BTreeMap;
+
 pub mod net;
 pub mod syntax;
+pub mod types;
+pub mod util;
 
 pub fn main() {
     use net::{GraftArg, Net, SymbolId};
@@ -25,9 +30,10 @@ pub fn main() {
     let mut scope = std::collections::BTreeMap::new();
     let show_agent = |s| format!("{:?}", s);
     println!("{}", d.show_net(&show_agent, &mut scope, 0));
-    let e = Net::graft(SymbolId::One, vec![]);
-    let mut a = Net::cut(d, 0, e, 0);
-    println!("{}", a.show_net(&show_agent, &mut scope, 0));
-    a.normal(net::rules::apply_rule);
-    println!("{}", a.show_net(&show_agent, &mut scope, 0));
+    let trees = d.substitute_iter(d.ports.iter());
+    let types = types::infer(trees);
+    let mut ctx = BTreeMap::new();
+    println!("|- {}", join_with(types.into_iter().map(|x| x.show(&mut ctx)), ", ".to_string()));
 }
+
+

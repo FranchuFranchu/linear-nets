@@ -1,3 +1,4 @@
+use crate::util::join_with;
 use crate::net::Net;
 
 use crate::net::Tree;
@@ -9,28 +10,7 @@ use std::collections::BTreeMap;
 use crate::net::VarId;
 
 use crate::net::PartitionOrBox;
-
-fn pick_name(scope: &mut BTreeMap<VarId, String>, id: VarId) -> String {
-    if let Some(n) = scope.get(&id) {
-        return n.clone();
-    }
-    let mut number_c = id + 1;
-    loop {
-        let mut result = String::new();
-        let mut number = number_c;
-        while number > 0 {
-            let remainder = (number - 1) % 26;
-            let character = (b'a' + remainder as u8) as char;
-            result.insert(0, character);
-            number = (number - 1) / 26;
-        }
-        if scope.values().all(|x| *x != result) {
-            scope.insert(id, result.clone());
-            break result;
-        }
-        number_c += 1;
-    }
-}
+use crate::util::pick_name;
 
 impl Net {
     pub fn show_net(
@@ -118,16 +98,11 @@ impl Net {
             PartitionOrBox::Partition(ports) => {
                 format!(
                     "[{}]",
-                    ports
+                    join_with(ports
                         .iter()
-                        .map(|i| { self.show_tree(show_agent, scope, visited, indent, i) })
-                        .fold(String::new(), |acc, s| {
-                            if acc.is_empty() {
-                                s // No space before the first string
-                            } else {
-                                acc + " " + &s // Add a space between the strings
-                            }
-                        })
+                        .map(|i| { self.show_tree(show_agent, scope, visited, indent, i) }),
+                        " ".to_string(),
+                    )
                 )
             }
             PartitionOrBox::Box(net) => {

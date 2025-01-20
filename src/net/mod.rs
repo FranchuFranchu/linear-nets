@@ -5,7 +5,7 @@ pub mod system;
 // Understands simplicity and understands boxing.
 
 use std::collections::{BTreeMap, VecDeque};
-use system::Cell;
+pub use system::Cell;
 
 pub type VarId = usize;
 pub type AgentId = usize;
@@ -72,14 +72,14 @@ impl SymbolId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum GraftArg {
     // net in the partition, and list of free ports
     Partition(Net, Vec<usize>),
     // net to box, and list of free ports. All free ports must be used here.
     Box(Net, Vec<usize>),
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PartitionOrBox {
     Partition(Vec<Tree>),
     Box(Net),
@@ -93,7 +93,7 @@ impl PartitionOrBox {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Tree {
     Var(VarId),
     Agent(SymbolId, Vec<PartitionOrBox>),
@@ -109,9 +109,9 @@ impl Tree {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Net {
-    ports: VecDeque<Tree>,
+    pub(crate) ports: VecDeque<Tree>,
     redexes: VecDeque<(Tree, Tree)>,
     vars: BTreeMap<usize, Option<Tree>>,
 }
@@ -240,5 +240,27 @@ impl Net {
             op.map_vars(&m);
             self.link(op, sp)
         }
+    }
+    
+    pub fn substitute_ref(&self, tree: &Tree) -> Tree {
+        fn substitute_ref_aux(this: &Net, aux: &PartitionOrBox) -> PartitionOrBox {
+            match aux {
+                PartitionOrBox::Partition(a) => PartitionOrBox::Partition(a.into_iter().map(|x| this.substitute_ref(x)).collect()),
+                PartitionOrBox::Box(b) => PartitionOrBox::Box(b.clone()),
+            }
+        }
+        match tree {
+            Tree::Agent(id, aux) => Tree::Agent(id.clone(), aux.into_iter().map(|x| substitute_ref_aux(self, x)).collect()),
+            Tree::Var(id) => {
+                if let Some(Some(b)) = self.vars.get(id) {
+                    self.substitute_ref(b)
+                } else {
+                    Tree::Var(*id)
+                }
+            }
+        }
+    }
+    pub fn substitute_iter<'a>(&self, trees: impl Iterator<Item=&'a Tree>) -> Vec<Tree> {
+        trees.map(|tree| self.substitute_ref(tree)).collect()
     }
 }
