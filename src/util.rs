@@ -1,4 +1,3 @@
-
 use std::collections::BTreeMap;
 
 use crate::net::VarId;
@@ -25,7 +24,7 @@ pub fn pick_name(scope: &mut BTreeMap<VarId, String>, id: VarId) -> String {
     }
 }
 
-pub fn join_with(a: impl Iterator<Item=String>, joiner: String) -> String {
+pub fn join_with(a: impl Iterator<Item = String>, joiner: String) -> String {
     a.fold(String::new(), |acc, s| {
         if acc.is_empty() {
             s
@@ -33,4 +32,4 @@ pub fn join_with(a: impl Iterator<Item=String>, joiner: String) -> String {
             acc + &joiner + &s
         }
     })
-}    
+}

@@ -1,5 +1,5 @@
-use crate::util::join_with;
 use crate::net::Net;
+use crate::util::join_with;
 
 use crate::net::Tree;
 
@@ -62,13 +62,15 @@ impl Net {
                         &mut s,
                         "{}",
                         self.show_aux(show_agent, scope, visited, indent, e)
-                    ).unwrap();
+                    )
+                    .unwrap();
                     for j in i {
                         write!(
                             &mut s,
                             "{}",
                             self.show_aux(show_agent, scope, visited, indent, j)
-                        ).unwrap();
+                        )
+                        .unwrap();
                     }
                     write!(&mut s, ")").unwrap();
                 }
@@ -98,9 +100,10 @@ impl Net {
             PartitionOrBox::Partition(ports) => {
                 format!(
                     "[{}]",
-                    join_with(ports
-                        .iter()
-                        .map(|i| { self.show_tree(show_agent, scope, visited, indent, i) }),
+                    join_with(
+                        ports
+                            .iter()
+                            .map(|i| { self.show_tree(show_agent, scope, visited, indent, i) }),
                         " ".to_string(),
                     )
                 )

@@ -125,15 +125,19 @@ impl Net {
         }
     }
     fn reduce(&mut self, f: fn(&mut Net, Cell, Cell)) -> bool {
-      if let Some((a, b)) = self.redexes.pop_front() {
-        f(self, Cell::from_tree(a).unwrap(), Cell::from_tree(b).unwrap());
-        true
-      } else{ 
-        false
-      }
+        if let Some((a, b)) = self.redexes.pop_front() {
+            f(
+                self,
+                Cell::from_tree(a).unwrap(),
+                Cell::from_tree(b).unwrap(),
+            );
+            true
+        } else {
+            false
+        }
     }
     pub fn normal(&mut self, f: fn(&mut Net, Cell, Cell)) {
-      while self.reduce(f) {}
+        while self.reduce(f) {}
     }
     fn link(&mut self, a: Tree, b: Tree) {
         if let Tree::Var(id) = a {
@@ -203,7 +207,7 @@ impl Net {
                     aux.push(PartitionOrBox::Partition(ports));
                 }
                 _ => {
-                    todo!("ERror")
+                    panic!("Incorrect partitioning!")
                 }
             }
         }
@@ -241,16 +245,23 @@ impl Net {
             self.link(op, sp)
         }
     }
-    
+
     pub fn substitute_ref(&self, tree: &Tree) -> Tree {
         fn substitute_ref_aux(this: &Net, aux: &PartitionOrBox) -> PartitionOrBox {
             match aux {
-                PartitionOrBox::Partition(a) => PartitionOrBox::Partition(a.into_iter().map(|x| this.substitute_ref(x)).collect()),
+                PartitionOrBox::Partition(a) => PartitionOrBox::Partition(
+                    a.into_iter().map(|x| this.substitute_ref(x)).collect(),
+                ),
                 PartitionOrBox::Box(b) => PartitionOrBox::Box(b.clone()),
             }
         }
         match tree {
-            Tree::Agent(id, aux) => Tree::Agent(id.clone(), aux.into_iter().map(|x| substitute_ref_aux(self, x)).collect()),
+            Tree::Agent(id, aux) => Tree::Agent(
+                id.clone(),
+                aux.into_iter()
+                    .map(|x| substitute_ref_aux(self, x))
+                    .collect(),
+            ),
             Tree::Var(id) => {
                 if let Some(Some(b)) = self.vars.get(id) {
                     self.substitute_ref(b)
@@ -260,7 +271,7 @@ impl Net {
             }
         }
     }
-    pub fn substitute_iter<'a>(&self, trees: impl Iterator<Item=&'a Tree>) -> Vec<Tree> {
+    pub fn substitute_iter<'a>(&self, trees: impl Iterator<Item = &'a Tree>) -> Vec<Tree> {
         trees.map(|tree| self.substitute_ref(tree)).collect()
     }
 }
