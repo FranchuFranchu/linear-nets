@@ -141,11 +141,13 @@ impl Net {
     }
     fn link(&mut self, a: Tree, b: Tree) {
         if let Tree::Var(id) = a {
-            if self.vars.get(&id).map(|x| x.is_some()).unwrap_or(false) {
-                let a = self.vars.remove(&id).unwrap().unwrap();
-                self.link(a, b);
-            } else {
-                let _ = self.vars.get_mut(&id).unwrap().insert(b);
+            match self.vars.remove(&id).unwrap() {
+                Some(a) => {
+                    self.link(a, b);
+                }
+                None => {
+                    self.vars.insert(id, Some(b));
+                }
             }
         } else if let Tree::Var(id) = b {
             self.link(Tree::Var(id), a)
@@ -159,9 +161,15 @@ impl Net {
             a.map_vars(m);
             b.map_vars(m)
         });
-        self.vars.values_mut().for_each(|a| {
-            a.as_mut().map(|x| x.map_vars(m));
-        });
+        let vars = core::mem::take(&mut self.vars);
+        self.vars = vars
+            .into_iter()
+            .map(|(mut k, mut v)| {
+                k = m(k);
+                v.as_mut().map(|x| x.map_vars(m));
+                (k, v)
+            })
+            .collect();
     }
     fn allocate_var_id(&mut self) -> VarId {
         for i in 0.. {

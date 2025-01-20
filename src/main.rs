@@ -15,9 +15,11 @@ pub fn main() {
     let mut s = String::new();
     std::io::stdin().lock().read_to_string(&mut s).unwrap();
     let mut parser = Parser::new(&s);
-    let net = parser.parse_net();
+    let book = parser.parse_book();
     let mut compiler = crate::syntax::compiler::Compiler::default();
-    let net = compiler.compile_net(net.unwrap());
+    compiler.compile_book(book.unwrap());
+
+    let net = compiler.main_net();
 
     let mut scope = std::collections::BTreeMap::new();
     let show_agent = |x| format!("{:?}", x);

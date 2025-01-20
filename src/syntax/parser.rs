@@ -5,6 +5,7 @@ use crate::syntax::desugarer::Desugarer;
 
 use crate::syntax::AstNet;
 
+use crate::syntax::Instruction;
 use crate::syntax::Tree;
 
 use std::collections::btree_map::Entry;
@@ -35,6 +36,39 @@ impl<'i> Parser<'i> {
             new_var: 0,
         }
     }
+    pub fn parse_instr(&mut self) -> Result<Instruction, String> {
+        let a = self.parse_tree()?;
+        self.skip_trivia();
+        if self.peek_one() == Some('=') {
+            self.consume("=")?;
+            let b = self.parse_tree()?;
+            self.skip_trivia();
+            Ok(Instruction::Monocut(a, b))
+        } else {
+            let Tree::Agent(name, args) = a else {
+                return Err("".to_string());
+            };
+            let mut new_args = vec![];
+            for i in args {
+                let Argument::Partition(p) = i else {
+                    return Err("".to_string());
+                };
+                let Ok([p]): Result<[Tree; 1], _> = p.try_into() else {
+                    return Err("".to_string());
+                };
+                new_args.push(p);
+            }
+            Ok(Instruction::Multicut(name, new_args))
+        }
+    }
+    pub fn parse_book(&mut self) -> Result<super::Book, String> {
+        let mut v = vec![];
+        while !self.is_eof() {
+            v.push(self.parse_net()?);
+            self.skip_trivia();
+        }
+        Ok(v)
+    }
     pub fn parse_net(&mut self) -> Result<AstNet, String> {
         let Tree::Agent(name, args) = self.parse_tree()? else {
             return Err("Not a good net name!".to_string());
@@ -43,17 +77,12 @@ impl<'i> Parser<'i> {
         let mut instr = vec![];
         self.consume("{")?;
         while !matches!(self.peek_one(), Some('}')) {
-            let a = self.parse_tree()?;
-            self.skip_trivia();
-            self.consume("=")?;
-            let b = self.parse_tree()?;
-            self.skip_trivia();
-            instr.push((a, b));
+            instr.push(self.parse_instr()?);
         }
         self.consume("}")?;
         let mut desugar = Desugarer::new(self.new_var);
         for i in instr {
-            desugar.desugar_pair(i);
+            desugar.desugar_instr(i);
         }
         let args = desugar.desugar_contents(args);
         Ok(AstNet {

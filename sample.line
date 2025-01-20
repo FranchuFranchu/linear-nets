@@ -21,3 +21,21 @@ FunctionComposition(out) {
 FunctionComposition(out) {
   out = Par(Par(Times(a)(b) Times(b)(c)) Par(a c))
 }
+
+
+FunctionComposition(inp)(res) {
+  a = a'
+  b = b'
+  c = c'
+  ab = Times(a)(b')
+  bc = Times(b)(c')
+  inp = Par(ab bc)
+  res = Par(a' c)
+  out = Par(inp res)
+}
+...
+{
+  ...
+  FunctionComposition(a)(b)
+  ...
+}

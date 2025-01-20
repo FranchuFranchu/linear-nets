@@ -1,6 +1,8 @@
+use super::Tree;
 use crate::net::GraftArg;
 use crate::net::Net;
 use crate::net::SymbolId;
+use crate::syntax::Instruction;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
@@ -9,6 +11,7 @@ pub struct Compiler {
     pub wire_to_nets: BTreeMap<usize, (usize, usize)>,
     pub nets: BTreeMap<usize, (Net, Vec<usize>)>,
     pub next_net_id: usize,
+    pub global_nets: BTreeMap<String, Net>,
 }
 
 fn agent_name_to_id(s: &str) -> Option<SymbolId> {
@@ -26,23 +29,71 @@ impl Compiler {
         self.next_net_id += 1;
         self.next_net_id - 1
     }
-    pub fn compile_net(&mut self, net: crate::syntax::AstNet) -> Net {
+    pub fn compile_book(&mut self, book: crate::syntax::Book) {
+        for net in book {
+            self.compile_net(net);
+        }
+    }
+    pub fn compile_net(&mut self, net: crate::syntax::AstNet) {
+        self.wire_to_nets = BTreeMap::new();
+        self.nets = BTreeMap::new();
+        self.next_net_id = 0;
         for i in net.instructions {
-            println!("{:?}", i);
-            self.compile_pair(i);
+            // println!("{:?}", i);
+            match i {
+                Instruction::Monocut(a, b) => self.compile_monocut(a, b),
+                Instruction::Multicut(a, b) => self.compile_multicut(a, b),
+            }
+            // println!("{:?}\n--", self);
         }
         // If everything was done right, there's exactly one net left.
         assert!(self.nets.len() == 1);
-        let net = core::mem::take(&mut self.nets)
+        let (mut new_net, net_wires) = core::mem::take(&mut self.nets)
             .into_iter()
             .next()
             .unwrap()
-            .1
-             .0;
+            .1;
+
+        let mut m = BTreeMap::new();
+        for wire in net_wires.into_iter() {
+          m.insert(wire, new_net.ports.pop_front().unwrap());
+        }
+        for wire in net.outputs {
+          let crate::syntax::Argument::Partition(wire) = wire else { unreachable!() };
+          let Ok([Tree::Var(wire)]): Result<[Tree; 1],_> = wire.try_into() else { unreachable!() };
+          new_net.ports.push_back(m.remove(&wire).unwrap());
+        }
         // TODO: This is the place where we'd add support for composing smaller nets
-        net
+        self.global_nets.insert(net.name, new_net);
     }
-    fn compile_pair(&mut self, (left, right): (super::Tree, super::Tree)) {
+    pub fn main_net(&mut self) -> Net {
+        self.global_nets.get("Main").unwrap().clone()
+    }
+    fn compile_multicut(&mut self, name: String, trees: Vec<Tree>) {
+        let mut net = self.global_nets.get(&name).unwrap().clone();
+        let new_net_id = self.make_new_net_id();
+        let port_count = net.ports.len();
+        let mut new_vars = vec![];
+        let mut new_index = 0;
+        for (wire, idx) in trees.into_iter().zip(0..port_count) {
+            let Tree::Var(wire) = wire else {
+                unreachable!()
+            };
+            let (part_net_id, addr) = self.wire_to_nets.remove(&wire).unwrap();
+            let (part_net, part_wires) = self.nets.remove(&part_net_id).unwrap();
+            for part_wire in part_wires {
+                if wire != part_wire {
+                    self.wire_to_nets.insert(part_wire, (new_net_id, new_index));
+                    new_vars.push(part_wire);
+                    new_index += 1;
+                }
+            }
+            net = Net::cut(net, idx, part_net, addr);
+        }
+        self.nets.insert(new_net_id, (net, new_vars));
+    }
+
+    fn compile_monocut(&mut self, left: Tree, right: Tree) {
         match (left, right) {
             (super::Tree::Var(a), super::Tree::Var(b)) => {
                 // Decide whether this is a cut or a wire.

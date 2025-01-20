@@ -147,7 +147,8 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                         Cell::One() => Type::One,
                         Cell::False((a,), mut b) => {
                             b.normal(crate::net::rules::apply_rule);
-                            let ports = core::mem::take(&mut b.ports);
+                            let mut ports = core::mem::take(&mut b.ports);
+                            ports.iter_mut().for_each(|x| *x = b.substitute_ref(x));
                             let Ok([mut t0]): Result<[Type; 1], _> = infer(ports.into()).try_into()
                             else {
                                 return Type::Error;

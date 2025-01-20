@@ -15,8 +15,9 @@ A plan to build simple and type-checked nets by construction. Work in progress.
   - [ ] All, Any
 - [X] Implement parser
 - [X] Implement AST -> Net compiler
-  - [ ] Implement composing nets together
+  - [X] Implement composing nets together
 - [X] Add better displaying of nets
+- [ ] Add tests
 - [ ] Interaction combinator compiler for proof net
 - [ ] Interaction combinator compiler for typesystem
 - [ ] Compiler from interaction combinators to exzternal runtimes.

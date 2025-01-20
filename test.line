@@ -1,13 +1,14 @@
-TwoIdsAndAFalse(out) {
-  b = c
-  Par(b c) = a
-  
-  b = c
-  Par(b c) = b
+Identity(out) {
+  a = b
+  Par(a b) = out
+}
+
+Main(out) {
+  Identity(a)
+  Identity(b)
 
   Times(a)(b) = d
 
-  e = q
   False(e)[d] = f
-  Par(q f) = out
+  Par(e f) = out
 }

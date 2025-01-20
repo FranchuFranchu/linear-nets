@@ -16,12 +16,19 @@ impl Tree {
     }
 }
 
+pub type Book = Vec<AstNet>;
+
 #[derive(Debug)]
-#[allow(unused)] // we'll use them later ;)
+pub enum Instruction {
+    Multicut(String, Vec<Tree>),
+    Monocut(Tree, Tree),
+}
+
+#[derive(Debug)]
 pub struct AstNet {
     name: String,
     outputs: Vec<Argument>,
-    instructions: Vec<(Tree, Tree)>,
+    instructions: Vec<Instruction>,
 }
 
 pub mod compiler;
