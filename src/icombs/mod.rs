@@ -1,3 +1,5 @@
+#[cfg(feature = "ivy")]
+pub mod ivy;
 pub mod net;
 
 use std::collections::BTreeMap;

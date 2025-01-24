@@ -1,5 +1,11 @@
+LeftVal(out) {
+    Left(Times(Par(a a))(Par(b b))) = out
+}
+RightVal(out) {
+    Right(Par(a a)) = out
+}
+
 Main(out) {
-  False(b)[One] = a
-  False(d)[One] = c
-  With(One)[d c][b a] = out
+    With(a)[x x][x x] = b
+    Par(a b) = out
 }

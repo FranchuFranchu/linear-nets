@@ -45,6 +45,7 @@ pub fn main() {
     use syntax::Parser;
     let mut s = String::new();
     std::io::stdin().lock().read_to_string(&mut s).unwrap();
+    print!("{}", s);
     let mut parser = Parser::new(&s);
     let book = parser.parse_book();
     let mut compiler = crate::syntax::compiler::Compiler::default();
@@ -55,6 +56,10 @@ pub fn main() {
             return;
         }
     };
+
+    println!("----- parse");
+    println!("{:?}", book);
+    println!("----- compile");
     compiler.compile_book(book);
 
     let mut net = compiler.main_net();
@@ -83,5 +88,9 @@ pub fn main() {
     );
 
     let net_icombs = icombs::Translator::translate_net(net);
+    println!("---- translate to icomb");
     println!("{:?}", net_icombs);
+    let ivy_net = icombs::ivy::EmitIvy::default().emit_net(net_icombs);
+    println!("---- translate to ivy");
+    println!("{}", ivy_net);
 }
