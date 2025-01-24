@@ -116,8 +116,8 @@ impl Tree {
 #[derive(Debug, Clone)]
 pub struct Net {
     pub(crate) ports: VecDeque<Tree>,
-    redexes: VecDeque<(Tree, Tree)>,
-    vars: BTreeMap<usize, Option<Tree>>,
+    pub(crate) redexes: VecDeque<(Tree, Tree)>,
+    pub(crate) vars: BTreeMap<usize, Option<Tree>>,
 }
 
 impl Net {
@@ -143,7 +143,7 @@ impl Net {
     pub fn normal(&mut self, f: fn(&mut Net, Cell, Cell)) {
         while self.reduce(f) {}
     }
-    fn link(&mut self, a: Tree, b: Tree) {
+    pub fn link(&mut self, a: Tree, b: Tree) {
         if let Tree::Var(id) = a {
             match self.vars.remove(&id).unwrap() {
                 Some(a) => {

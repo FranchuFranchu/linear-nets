@@ -5,6 +5,7 @@ use std::io::Read;
 use crate::util::join_with;
 use std::collections::BTreeMap;
 
+pub mod icombs;
 pub mod net;
 pub mod syntax;
 pub mod types;
@@ -80,4 +81,7 @@ pub fn main() {
             ", ".to_string()
         )
     );
+
+    let net_icombs = icombs::Translator::translate_net(net);
+    println!("{:?}", net_icombs);
 }
