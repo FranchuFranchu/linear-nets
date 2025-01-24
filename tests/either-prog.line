@@ -1,0 +1,10 @@
+LeftVal(out) {
+    Left(Times(Par(a a))(Par(b b))) = out
+}
+RightVal(out) {
+    Right(Par(a a)) = out
+}
+
+Main(out w) {
+    With(out)[x x][x x] = w
+}

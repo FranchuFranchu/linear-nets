@@ -11,7 +11,10 @@ pub fn apply_rule(mut net: &mut Net, left: Cell, right: Cell) {
 pub fn is_defined(left: &Cell, right: &Cell) -> bool {
     use Cell::*;
     match (left, right) {
-        (Times(..), Par(..)) | (One(..), False(..)) => true,
+        (Times(..), Par(..))
+        | (One(..), False(..))
+        | (Left(..), With(..))
+        | (Right(..), With(..)) => true,
         _ => false,
     }
 }
@@ -25,6 +28,12 @@ pub fn apply_rule_inner(net: &mut Net, left: Cell, right: Cell) {
         }
         (One(), False((a,), b)) => {
             net.plug_box(b, vec![a]);
+        }
+        (Left((out,)), With((ctx,), l, _)) => {
+            net.plug_box(l, vec![out, ctx]);
+        }
+        (Right((out,)), With((ctx,), _, r)) => {
+            net.plug_box(r, vec![out, ctx]);
         }
         _ => {}
     }

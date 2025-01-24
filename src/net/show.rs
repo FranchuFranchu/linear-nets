@@ -13,6 +13,11 @@ use crate::net::PartitionOrBox;
 use crate::util::pick_name;
 
 impl Net {
+    pub fn print_net_simple(&self) {
+        let mut scope = std::collections::BTreeMap::new();
+        let show_agent = |x| format!("{:?}", x);
+        println!("{}", self.show_net(&show_agent, &mut scope, 0));
+    }
     pub fn show_net(
         &self,
         show_agent: &dyn Fn(SymbolId) -> String,
@@ -72,7 +77,6 @@ impl Net {
                         )
                         .unwrap();
                     }
-                    write!(&mut s, ")").unwrap();
                 }
                 s
             }
@@ -99,7 +103,7 @@ impl Net {
         match aux {
             PartitionOrBox::Partition(ports) => {
                 format!(
-                    "[{}]",
+                    "({})",
                     join_with(
                         ports
                             .iter()
@@ -109,7 +113,7 @@ impl Net {
                 )
             }
             PartitionOrBox::Box(net) => {
-                format!("{{\n{}}}", net.show_net(show_agent, scope, indent + 1))
+                format!("[\n{}]", net.show_net(show_agent, scope, indent + 1))
             }
         }
     }

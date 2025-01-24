@@ -1,0 +1,8 @@
+FalseToOne(a b) {
+  False(b)[One] = a
+}
+
+Main(out) {
+  FalseToOne(a)(b)
+  Par(a b) = out
+}

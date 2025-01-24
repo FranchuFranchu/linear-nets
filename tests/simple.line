@@ -1,0 +1,4 @@
+Main(out) {
+  a = b
+  Par(a b) = out
+}

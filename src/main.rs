@@ -10,6 +10,36 @@ pub mod syntax;
 pub mod types;
 pub mod util;
 
+#[cfg(test)]
+pub mod test;
+
+//
+// - Input string
+// |
+// | syntax::parser
+// |
+// V Syntax trees
+// |
+// | syntax::desugarer
+// |
+// V Desugared syntax (list of simple net operations)
+// |
+// | syntax::compiler (using net module)
+// |
+// v Net
+// |
+// | net::rules
+// |
+// v Normalized net
+// |
+// | types::infer
+// |
+// v Type of free ports
+// |
+// | types::show
+// |
+// - Output string
+
 pub fn main() {
     use syntax::Parser;
     let mut s = String::new();
@@ -17,13 +47,29 @@ pub fn main() {
     let mut parser = Parser::new(&s);
     let book = parser.parse_book();
     let mut compiler = crate::syntax::compiler::Compiler::default();
-    compiler.compile_book(book.unwrap());
+    let book = match book {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("Syntax error: {}", e);
+            return;
+        }
+    };
+    compiler.compile_book(book);
 
-    let net = compiler.main_net();
+    let mut net = compiler.main_net();
 
     let mut scope = std::collections::BTreeMap::new();
     let show_agent = |x| format!("{:?}", x);
-    println!("{}", net.show_net(&show_agent, &mut scope, 0));
+    print!("{}", net.show_net(&show_agent, &mut scope, 0));
+
+    net.normal(crate::net::rules::apply_rule);
+    println!("----- reduce");
+
+    let mut scope = std::collections::BTreeMap::new();
+    let show_agent = |x| format!("{:?}", x);
+    print!("{}", net.show_net(&show_agent, &mut scope, 0));
+    println!("----- infer");
+
     let trees = net.substitute_iter(net.ports.iter());
     let types = types::infer(trees);
     let mut ctx = BTreeMap::new();

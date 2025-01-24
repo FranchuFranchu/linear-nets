@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 TSPL = "0.0.13"
+[dev-dependencies]
+insta = "1.42.0"
+glob = "0.3.2"

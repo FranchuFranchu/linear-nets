@@ -1,0 +1,14 @@
+Identity(out) {
+  a = b
+  Par(a b) = out
+}
+
+Main(out) {
+  Identity(a)
+  Identity(b)
+
+  Times(a)(b) = d
+
+  False(e)[d] = f
+  Par(e f) = out
+}

@@ -64,8 +64,8 @@ impl Desugarer {
             Tree::Agent(id, args) => {
                 let new_var = self.make_new_var();
                 let o = Instruction::Monocut(
-                    Tree::Var(new_var),
                     Tree::Agent(id, self.desugar_contents(args)),
+                    Tree::Var(new_var),
                 );
                 self.output.push(o);
                 self.validly_declared_vars.insert(new_var);

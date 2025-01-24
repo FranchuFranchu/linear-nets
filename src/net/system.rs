@@ -45,6 +45,38 @@ impl Cell {
                 let [a] = a.try_into().unwrap();
                 Some(Cell::False((a,), b))
             }
+            SymbolId::Left => {
+                let [PartitionOrBox::Partition(a)]: [PartitionOrBox; 1] = args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().ok()?;
+                Some(Cell::Left((a,)))
+            }
+            SymbolId::Right => {
+                let [PartitionOrBox::Partition(a)]: [PartitionOrBox; 1] = args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().ok()?;
+                Some(Cell::Right((a,)))
+            }
+            SymbolId::With => {
+                let [PartitionOrBox::Partition(a), PartitionOrBox::Box(left), PartitionOrBox::Box(right)]: [PartitionOrBox; 3] = args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().ok()?;
+                Some(Cell::With((a,), left, right))
+            }
+            SymbolId::True => {
+                let [PartitionOrBox::Partition(a)]: [PartitionOrBox; 1] = args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().ok()?;
+                Some(Cell::True((a,)))
+            }
             _ => None,
         }
     }

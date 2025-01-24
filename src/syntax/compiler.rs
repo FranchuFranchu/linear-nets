@@ -20,6 +20,12 @@ fn agent_name_to_id(s: &str) -> Option<SymbolId> {
         "Par" => Some(SymbolId::Par),
         "False" => Some(SymbolId::False),
         "One" => Some(SymbolId::One),
+
+        "Left" => Some(SymbolId::Left),
+        "Right" => Some(SymbolId::Right),
+        "With" => Some(SymbolId::With),
+        "True" => Some(SymbolId::True),
+
         _ => None,
     }
 }
@@ -53,17 +59,22 @@ impl Compiler {
             .next()
             .unwrap()
             .1;
-
+        // Here, we make the wire order in the resulting net match the wire order in the definition.
         let mut m = BTreeMap::new();
         for wire in net_wires.into_iter() {
-          m.insert(wire, new_net.ports.pop_front().unwrap());
+            m.insert(wire, new_net.ports.pop_front().unwrap());
         }
-        for wire in net.outputs {
-          let crate::syntax::Argument::Partition(wire) = wire else { unreachable!() };
-          let Ok([Tree::Var(wire)]): Result<[Tree; 1],_> = wire.try_into() else { unreachable!() };
-          new_net.ports.push_back(m.remove(&wire).unwrap());
+        use crate::syntax::Argument;
+        let Ok([Argument::Partition(wires)]): Result<[Argument; 1], _> = net.outputs.try_into()
+        else {
+            unreachable!()
+        };
+        for wire in wires {
+            let Tree::Var(wire) = wire else {
+                unreachable!()
+            };
+            new_net.ports.push_back(m.remove(&wire).unwrap());
         }
-        // TODO: This is the place where we'd add support for composing smaller nets
         self.global_nets.insert(net.name, new_net);
     }
     pub fn main_net(&mut self) -> Net {
@@ -72,10 +83,9 @@ impl Compiler {
     fn compile_multicut(&mut self, name: String, trees: Vec<Tree>) {
         let mut net = self.global_nets.get(&name).unwrap().clone();
         let new_net_id = self.make_new_net_id();
-        let port_count = net.ports.len();
         let mut new_vars = vec![];
         let mut new_index = 0;
-        for (wire, idx) in trees.into_iter().zip(0..port_count) {
+        for wire in trees.into_iter() {
             let Tree::Var(wire) = wire else {
                 unreachable!()
             };
@@ -88,7 +98,7 @@ impl Compiler {
                     new_index += 1;
                 }
             }
-            net = Net::cut(net, idx, part_net, addr);
+            net = Net::cut(net, 0, part_net, addr);
         }
         self.nets.insert(new_net_id, (net, new_vars));
     }
@@ -155,7 +165,7 @@ impl Compiler {
                                     };
                                     let (net, addr) = self.wire_to_nets.remove(&wire).unwrap();
                                     if let Some(net_id) = net_id {
-                                        assert!(net_id == net);
+                                        assert!(net_id == net, "Wires from the same partition were found to be from different nets!");
                                     } else {
                                         net_id = Some(net);
                                     };
@@ -190,7 +200,7 @@ impl Compiler {
                     todo!();
                 }
             }
-            _ => unreachable!(),
+            (left, right) => unreachable!("{:?} {:?}", left, right),
         }
     }
 }

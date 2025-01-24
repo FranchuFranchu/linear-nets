@@ -24,6 +24,8 @@ impl Type {
                 format!("({} & {})", a.show(scope), b.show(scope))
             }
             Type::Var(id, invert) => pick_name(scope, *id) + if *invert { "'" } else { "" },
+            Type::Hole => format!("_"),
+            Type::Error => format!("Error"),
             x => todo!("Can not show {:?}", x),
         }
     }

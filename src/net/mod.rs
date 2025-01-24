@@ -67,6 +67,10 @@ impl SymbolId {
             Par => vec![Arg::Partition(2)],
             One => vec![],
             False => vec![Arg::Partition(1), Arg::Box(1)],
+            Left => vec![Arg::Partition(1)],
+            Right => vec![Arg::Partition(1)],
+            With => vec![Arg::Partition(1), Arg::Box(2), Arg::Box(2)],
+            True => vec![Arg::Partition(1)],
             _ => todo!(),
         }
     }

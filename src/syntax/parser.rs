@@ -46,15 +46,15 @@ impl<'i> Parser<'i> {
             Ok(Instruction::Monocut(a, b))
         } else {
             let Tree::Agent(name, args) = a else {
-                return Err("".to_string());
+                return Err("Found standalone var".to_string());
             };
             let mut new_args = vec![];
             for i in args {
                 let Argument::Partition(p) = i else {
-                    return Err("".to_string());
+                    return Err("Multicut requires partitions, not boxes".to_string());
                 };
                 let Ok([p]): Result<[Tree; 1], _> = p.try_into() else {
-                    return Err("".to_string());
+                    return Err("Too many wires in multicut partition".to_string());
                 };
                 new_args.push(p);
             }
@@ -142,4 +142,7 @@ impl<'i> Parser<'i> {
             _ => Err("Not an argument!".to_string()),
         }
     }
+}
+pub fn parse_file(s: &str) -> Result<crate::syntax::Book, String> {
+    Parser::new(s).parse_book()
 }

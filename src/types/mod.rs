@@ -26,6 +26,7 @@ pub enum Type {
     Var(usize, bool),
 
     Error,
+    Hole,
 }
 
 impl std::ops::Not for Type {
@@ -35,9 +36,14 @@ impl std::ops::Not for Type {
         match self {
             Type::One => Type::False,
             Type::False => Type::One,
-            Type::Var(a, b) => Type::Var(a, !b),
             Type::Times(a, b) => Type::Par(Box::new(!*a), Box::new(!*b)),
             Type::Par(a, b) => Type::Times(Box::new(!*a), Box::new(!*b)),
+            Type::True => Type::Zero,
+            Type::Zero => Type::True,
+            Type::Plus(a, b) => Type::Plus(Box::new(!*a), Box::new(!*b)),
+            Type::With(a, b) => Type::With(Box::new(!*a), Box::new(!*b)),
+            Type::Var(a, b) => Type::Var(a, !b),
+            Type::Hole => Type::Hole,
             _ => todo!(),
         }
     }
@@ -54,7 +60,7 @@ impl Type {
                 a.replace(k, v.clone());
                 b.replace(k, v);
             }
-            Type::One | Type::False | Type::Zero | Type::True => (),
+            Type::One | Type::False | Type::Zero | Type::True | Type::Hole => (),
             _ => todo!(),
         }
     }
@@ -67,7 +73,7 @@ impl Type {
                 a.replace_vars(f);
                 b.replace_vars(f);
             }
-            Type::One | Type::False | Type::Zero | Type::True => (),
+            Type::One | Type::False | Type::Zero | Type::True | Type::Hole => (),
             _ => todo!(),
         }
     }
@@ -79,7 +85,7 @@ impl Type {
                 vs.append(&mut b.as_ref().var_set());
                 vs
             }
-            Type::One | Type::False | Type::Zero | Type::True => BTreeSet::new(),
+            Type::One | Type::False | Type::Zero | Type::True | Type::Hole => BTreeSet::new(),
             _ => todo!(),
         }
     }
@@ -99,8 +105,12 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
         }
         fn unify(&mut self, a: Type, b: Type) -> Type {
             match (a, b) {
+                (Type::Hole, a) => a,
+                (a, Type::Hole) => a,
                 (Type::One, Type::One) => Type::One,
                 (Type::False, Type::False) => Type::False,
+                (Type::Zero, Type::Zero) => Type::Zero,
+                (Type::True, Type::True) => Type::True,
                 (Type::Times(a0, a1), Type::Times(b0, b1)) => Type::Times(
                     Box::new(self.unify(*a0, *b0)),
                     Box::new(self.unify(*a1, *b1)),
@@ -109,13 +119,50 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                     Box::new(self.unify(*a0, *b0)),
                     Box::new(self.unify(*a1, *b1)),
                 ),
-                (Type::Var(_a0, _a1), Type::Var(_b0, _b1)) => todo!(),
+                (Type::Plus(a0, a1), Type::Plus(b0, b1)) => Type::Plus(
+                    Box::new(self.unify(*a0, *b0)),
+                    Box::new(self.unify(*a1, *b1)),
+                ),
+                (Type::With(a0, a1), Type::With(b0, b1)) => Type::With(
+                    Box::new(self.unify(*a0, *b0)),
+                    Box::new(self.unify(*a1, *b1)),
+                ),
+                // TODO: Is this correct?
+                (Type::Var(a0, a1), Type::Var(b0, b1)) => {
+                    match (
+                        self.vars_concrete.get(&(a0, a1)),
+                        self.vars_concrete.get(&(b0, b1)),
+                    ) {
+                        (Some(a), Some(b)) => self.unify(a.clone(), b.clone()),
+                        (None, Some(b)) => self.unify(Type::Var(a0, a1), b.clone()),
+                        (Some(a), None) => self.unify(a.clone(), Type::Var(b0, b1)),
+                        (None, None) => {
+                            self.vars_concrete.insert((a0, a1), Type::Var(b0, b1));
+                            self.vars_concrete.insert((a0, !a1), Type::Var(b0, !b1));
+                            Type::Var(b0, b1)
+                        }
+                    }
+                }
                 (Type::Var(a0, a1), b) | (b, Type::Var(a0, a1)) => {
                     self.vars_concrete.insert((a0, a1), b.clone());
                     self.vars_concrete.insert((a0, !a1), !b.clone());
                     b
                 }
                 _ => Type::Error,
+            }
+        }
+        fn freshen_vars(&mut self, types: &mut [&mut Type]) {
+            let mut map = BTreeMap::new();
+            for t in &mut *types {
+                for old in t.var_set() {
+                    if !map.contains_key(&old) {
+                        let new = self.make_new_var();
+                        map.insert(old, new);
+                    }
+                }
+            }
+            for t in &mut *types {
+                t.replace_vars(&|old| *map.get(&old).unwrap());
             }
         }
         fn infer(&mut self, tree: Tree) -> Type {
@@ -154,12 +201,7 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                                 return Type::Error;
                             };
                             let t1 = self.infer(a);
-                            let mut map = BTreeMap::new();
-                            for old in t0.var_set() {
-                                let new = self.make_new_var();
-                                map.insert(old, new);
-                            }
-                            t0.replace_vars(&|old| *map.get(&old).unwrap());
+                            self.freshen_vars(&mut [&mut t0]);
                             let tt = self.unify(t0, !t1);
                             if tt != Type::Error {
                                 Type::False
@@ -167,7 +209,46 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                                 Type::Error
                             }
                         }
-                        _ => todo!(),
+                        Cell::Left((out,)) => {
+                            Type::Plus(Box::new(self.infer(out)), Box::new(Type::Hole))
+                        }
+                        Cell::Right((out,)) => {
+                            Type::Plus(Box::new(Type::Hole), Box::new(self.infer(out)))
+                        }
+                        Cell::True((out,)) => {
+                            self.infer(out);
+                            Type::True
+                        }
+                        Cell::With((ctx,), mut left, mut right) => {
+                            left.normal(crate::net::rules::apply_rule);
+                            right.normal(crate::net::rules::apply_rule);
+
+                            let mut ports = core::mem::take(&mut left.ports);
+                            ports.iter_mut().for_each(|x| *x = left.substitute_ref(x));
+                            let Ok([mut tvl, mut tcl]): Result<[Type; 2], _> =
+                                infer(ports.into()).try_into()
+                            else {
+                                return Type::Error;
+                            };
+                            self.freshen_vars(&mut [&mut tvl, &mut tcl]);
+
+                            let mut ports = core::mem::take(&mut right.ports);
+                            ports.iter_mut().for_each(|x| *x = right.substitute_ref(x));
+                            let Ok([mut tvr, mut tcr]): Result<[Type; 2], _> =
+                                infer(ports.into()).try_into()
+                            else {
+                                return Type::Error;
+                            };
+                            self.freshen_vars(&mut [&mut tvr, &mut tcr]);
+
+                            let tctx = self.infer(ctx);
+                            let tc = self.unify(tcl, tcr);
+                            if self.unify(!tctx, tc) != Type::Error {
+                                Type::With(Box::new(tvl), Box::new(tvr))
+                            } else {
+                                Type::Error
+                            }
+                        }
                     }
                 }
             }
