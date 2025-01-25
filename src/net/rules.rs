@@ -41,7 +41,7 @@ pub fn apply_rule_inner(net: &mut Net, left: Cell, right: Cell) {
         (Right((out,)), With((ctx,), _, r)) => {
             net.plug_box(r, vec![out, ctx]);
         }
-        (Exp0(ebox), Weak((oc,), ob)) => {
+        (Exp0(_), Weak((oc,), ob)) => {
             net.plug_box(ob, vec![oc]);
         }
         (Exp0(ebox), Dere((out,))) => {
@@ -51,9 +51,7 @@ pub fn apply_rule_inner(net: &mut Net, left: Cell, right: Cell) {
             net.link(Exp0(ebox.clone()).to_tree(), a);
             net.link(Exp0(ebox).to_tree(), b);
         }
-        (Exp1((input,), ebox), Weak((wctx,), wbox)) => {
-            net.link(input, Weak((wctx,), wbox).to_tree())
-        }
+        (Exp1((input,), _), Weak((wctx,), wbox)) => net.link(input, Weak((wctx,), wbox).to_tree()),
         (Exp1((input,), ebox), Dere((out,))) => {
             let (a, b) = net.create_wire();
             net.link(input, Dere((a,)).to_tree());

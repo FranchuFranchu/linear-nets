@@ -1,9 +1,9 @@
+pub mod encoding;
 #[cfg(feature = "hvm")]
 pub mod hvm2;
 #[cfg(feature = "ivy")]
 pub mod ivy;
 pub mod net;
-pub mod encoding;
 
 use std::collections::BTreeMap;
 
@@ -144,6 +144,54 @@ impl Translator {
                         Box::new(ICombTree::Con(Box::new(cr), Box::new(vr))),
                     )),
                 )
+            }
+            Cell::Exp0(ebox) => {
+                let Ok([a]): Result<[ICombTree; 1], _> =
+                    self.translate_net_and_merge(ebox).try_into()
+                else {
+                    unreachable!()
+                };
+                encoding::encode_tree(&mut self.net, a)
+            }
+            Cell::Exp1((ctx,), ebox) => {
+                todo!();
+                /*
+                let Ok([a, ctx_inner]): Result<[ICombTree; 2], _> =
+                    self.translate_net_and_merge(ebox).try_into()
+                else {
+                    unreachable!()
+                };
+                let ctx = self.translate_tree(ctx);
+                ICombTree::c(
+                    ctx,
+                    encoding::encode_tree(&mut self.net, ICombTree::c(ctx_inner, a)),
+                ) */
+            }
+            Cell::Weak((ctx,), wbox) => {
+                let Ok([c]): Result<[ICombTree; 1], _> =
+                    self.translate_net_and_merge(wbox).try_into()
+                else {
+                    unreachable!()
+                };
+                let ctx = self.translate_tree(ctx);
+
+                self.net.link(ctx, c);
+
+                ICombTree::e()
+            }
+            Cell::Dere((out,)) => {
+                let (a0, a1) = self.net.create_wire();
+                let (b0, b1) = self.net.create_wire();
+                let out = self.translate_tree(out);
+                ICombTree::c(
+                    ICombTree::c(ICombTree::d(a0, b0), out),
+                    ICombTree::c(a1, b1),
+                )
+            }
+            Cell::Cntr((a,), (b,)) => {
+                let a = self.translate_tree(a);
+                let b = self.translate_tree(b);
+                ICombTree::d(a, b)
             }
             _ => todo!(),
         }

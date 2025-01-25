@@ -267,7 +267,7 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
 
                             let mut ports = core::mem::take(&mut net.ports);
                             ports.iter_mut().for_each(|x| *x = net.substitute_ref(x));
-                            let Ok([mut t, mut inp_t]): Result<[Type; 2], _> =
+                            let Ok([mut t, inp_t]): Result<[Type; 2], _> =
                                 infer(ports.into()).try_into()
                             else {
                                 return Type::Error;

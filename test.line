@@ -3,14 +3,8 @@ ComposeFunctions(a b out) {
   Times(m)(bo) = b
   Par(ai bo) = out
 }
-ExpCompose(res) {
+Main(res) {
   ComposeFunctions(a)(b)(out)
   Par(Par(a b) out) = x
   Exp0[x] = res
-}
-Main(out) {
-    ExpCompose(c)
-    Cntr(Dere(a))(Dere(b)) = d
-    c = d
-    Par(a b) = out
 }

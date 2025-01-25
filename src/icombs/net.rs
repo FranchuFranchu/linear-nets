@@ -11,6 +11,17 @@ pub enum Tree {
     Var(usize),
 }
 impl Tree {
+    pub fn c(a: Tree, b: Tree) -> Tree {
+        Tree::Con(Box::new(a), Box::new(b))
+    }
+    pub fn d(a: Tree, b: Tree) -> Tree {
+        Tree::Con(Box::new(a), Box::new(b))
+    }
+    pub fn e() -> Tree {
+        Tree::Era
+    }
+}
+impl Tree {
     fn map_vars(&mut self, m: &mut impl FnMut(VarId) -> VarId) {
         use Tree::*;
         match self {

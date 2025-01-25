@@ -312,7 +312,7 @@ impl Net {
         fn substitute_mut_aux(this: &mut Net, aux: &mut PartitionOrBox) {
             match aux {
                 PartitionOrBox::Partition(a) => a.iter_mut().for_each(|x| this.substitute_mut(x)),
-                PartitionOrBox::Box(_) => {}
+                PartitionOrBox::Box(b) => b.canonical(),
             }
         }
         match tree {

@@ -11,10 +11,7 @@ struct Encoder<'a> {
 impl<'a> Encoder<'a> {
     fn encode_subtree(&mut self, tree: Tree) -> Tree {
         match tree {
-            Tree::Con(a, b) => Tree::Con(
-                Box::new(self.encode_subtree(*a)),
-                Box::new(self.encode_subtree(*b)),
-            ),
+            Tree::Con(a, b) => Tree::c(self.encode_subtree(*a), self.encode_subtree(*b)),
             Tree::Dup(a, b) => {
                 let a = self.encode_subtree(*a);
                 let b = self.encode_subtree(*b);
@@ -27,26 +24,25 @@ impl<'a> Encoder<'a> {
         }
     }
     fn merge_ctrs(&mut self, mut ports: Vec<(Tree, Tree, Tree)>) -> (Tree, Tree, Tree) {
-        if ports.len() == 1 {
+        if ports.len() == 0 {
+            return (Tree::e(), Tree::e(), Tree::e());
+        } else if ports.len() == 1 {
             ports.pop().unwrap()
         } else {
-            let rest = ports.split_off(ports.len() / 2);
+            let rest = ports.split_off(ports.len() / 2 + 1);
             let (l0, l1, l2) = self.merge_ctrs(ports);
             let (r0, r1, r2) = self.merge_ctrs(rest);
-            (
-                Tree::Con(Box::new(l0), Box::new(r0)),
-                Tree::Con(Box::new(l1), Box::new(r1)),
-                Tree::Con(Box::new(l2), Box::new(r2)),
-            )
+            (Tree::c(l0, r0), Tree::c(l1, r1), Tree::c(l2, r2))
         }
     }
     fn encode_tree(&mut self, tree: Tree) -> Tree {
         let tree = self.encode_subtree(tree);
         let dups = core::mem::take(&mut self.dups);
         let (inputs, l, r) = self.merge_ctrs(dups);
-        Tree::Con(
-            Box::new(Tree::Con(Box::new(inputs), Box::new(tree))),
-            Box::new(Tree::Con(Box::new(l), Box::new(r))),
-        )
+        Tree::c(Tree::c(inputs, tree), Tree::c(l, r))
     }
+}
+
+pub fn encode_tree(net: &mut Net, tree: Tree) -> Tree {
+    Encoder { net, dups: vec![] }.encode_tree(tree)
 }
