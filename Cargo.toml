@@ -6,9 +6,11 @@ edition = "2021"
 [dependencies]
 TSPL = "0.0.13"
 ivy = { git = "https://github.com/VineLang/vine/", optional = true }
+hvm = { git = "https://github.com/HigherOrderCo/hvm/", optional = true }
 
 [features]
 ivy = ["dep:ivy"]
+hvm = ["dep:hvm"]
 
 [dev-dependencies]
 insta = "1.42.0"

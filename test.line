@@ -1,11 +1,10 @@
-LeftVal(out) {
-    Left(Times(Par(a a))(Par(b b))) = out
-}
-RightVal(out) {
-    Right(Par(a a)) = out
+ComposeFunctions(a b out) {
+  Times(ai)(m) = a
+  Times(m)(bo) = b
+  Par(ai bo) = out
 }
 
-Main(out) {
-    With(a)[x x][x x] = b
-    Par(a b) = out
+Main(res) {
+  ComposeFunctions(a)(b)(out)
+  Par(Par(a b) out) = res
 }

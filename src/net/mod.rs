@@ -257,6 +257,19 @@ impl Net {
             self.link(op, sp)
         }
     }
+    pub fn canonical(&mut self) {
+        let mut ports = core::mem::take(&mut self.ports);
+        for i in ports.iter_mut() {
+            self.substitute_mut(i);
+        }
+        self.ports = ports;
+        let mut redexes = core::mem::take(&mut self.redexes);
+        for (a, b) in redexes.iter_mut() {
+            self.substitute_mut(a);
+            self.substitute_mut(b);
+        }
+        self.redexes = redexes;
+    }
 
     pub fn substitute_ref(&self, tree: &Tree) -> Tree {
         fn substitute_ref_aux(this: &Net, aux: &PartitionOrBox) -> PartitionOrBox {
@@ -279,6 +292,29 @@ impl Net {
                     self.substitute_ref(b)
                 } else {
                     Tree::Var(*id)
+                }
+            }
+        }
+    }
+
+    pub fn substitute_mut(&mut self, tree: &mut Tree) {
+        fn substitute_mut_aux(this: &mut Net, aux: &mut PartitionOrBox) {
+            match aux {
+                PartitionOrBox::Partition(a) => a.iter_mut().for_each(|x| this.substitute_mut(x)),
+                PartitionOrBox::Box(b) => {}
+            }
+        }
+        match tree {
+            Tree::Agent(id, aux) => aux.iter_mut().for_each(|x| substitute_mut_aux(self, x)),
+            s => {
+                let Tree::Var(id) = &s else { unreachable!() };
+                if let Some(Some(_)) = self.vars.get(id) {
+                    let Some(Some(mut w)) = self.vars.remove(id) else {
+                        unreachable!()
+                    };
+                    self.substitute_mut(&mut w);
+                    *s = w;
+                } else {
                 }
             }
         }

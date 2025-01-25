@@ -76,6 +76,7 @@ pub fn main() {
     print!("{}", net.show_net(&show_agent, &mut scope, 0));
     println!("----- infer");
 
+    net.canonical();
     let trees = net.substitute_iter(net.ports.iter());
     let types = types::infer(trees);
     let mut ctx = BTreeMap::new();
@@ -90,7 +91,7 @@ pub fn main() {
     let net_icombs = icombs::Translator::translate_net(net);
     println!("---- translate to icomb");
     println!("{:?}", net_icombs);
-    let ivy_net = icombs::ivy::EmitIvy::default().emit_net(net_icombs);
-    println!("---- translate to ivy");
-    println!("{}", ivy_net);
+    let ivy_net = icombs::hvm2::EmitHVM2::default().emit_net(net_icombs);
+    println!("---- translate to HVM1");
+    println!("{}", ivy_net.show());
 }

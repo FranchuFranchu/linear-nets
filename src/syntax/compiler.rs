@@ -53,7 +53,12 @@ impl Compiler {
             // println!("{:?}\n--", self);
         }
         // If everything was done right, there's exactly one net left.
-        assert!(self.nets.len() == 1);
+        if self.nets.len() != 1 {
+            panic!(
+                "Definition consists of more than one disconnected subnets!: \n{:?}",
+                self.nets
+            )
+        }
         let (mut new_net, net_wires) = core::mem::take(&mut self.nets)
             .into_iter()
             .next()
