@@ -70,8 +70,9 @@ pub fn main() {
     let show_agent = |x| format!("{:?}", x);
     print!("{}", net.show_net(&show_agent, &mut scope, 0));
 
+    println!("----- reducing...");
     net.normal(crate::net::rules::apply_rule);
-    println!("----- reduce");
+    println!("----- reduced");
 
     let mut scope = std::collections::BTreeMap::new();
     let show_agent = |x| format!("{:?}", x);
@@ -95,8 +96,14 @@ pub fn main() {
     println!("{}", net_icombs.show());
     #[cfg(feature = "hvm")]
     {
-        let ivy_net = icombs::hvm2::EmitHVM2::default().emit_net(net_icombs);
-        println!("---- translate to HVM1");
+        let hvm_net = icombs::hvm2::EmitHVM2::default().emit_net(net_icombs);
+        println!("---- translate to HVM2");
+        println!("{}", hvm_net.show());
+    }
+    #[cfg(feature = "ivy")]
+    {
+        let ivy_net = icombs::ivy::EmitIvy::default().emit_net(net_icombs);
+        println!("---- translate to Ivy");
         println!("{}", ivy_net.show());
     }
 }

@@ -9,6 +9,12 @@ pub enum Cell {
     Right((Tree,)),
     With((Tree,), Net, Net),
     True((Tree,)),
+
+    Exp0(Net),
+    Exp1((Tree,), Net),
+    Weak((Tree,), Net),
+    Dere((Tree,)),
+    Cntr((Tree,), (Tree,)),
 }
 
 impl Cell {
@@ -77,6 +83,48 @@ impl Cell {
                 let [a] = a.try_into().ok()?;
                 Some(Cell::True((a,)))
             }
+            SymbolId::Exp0 => {
+                let [PartitionOrBox::Box(b)]: [PartitionOrBox; 1] = args.try_into().ok()? else {
+                    return None;
+                };
+                Some(Cell::Exp0(b))
+            }
+            SymbolId::Exp1 => {
+                let [PartitionOrBox::Partition(a), PartitionOrBox::Box(b)]: [PartitionOrBox; 2] =
+                    args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().unwrap();
+                Some(Cell::Exp1((a,), b))
+            }
+            SymbolId::Weak => {
+                let [PartitionOrBox::Partition(a), PartitionOrBox::Box(b)]: [PartitionOrBox; 2] =
+                    args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().unwrap();
+                Some(Cell::Weak((a,), b))
+            }
+            SymbolId::Dere => {
+                let [PartitionOrBox::Partition(a)]: [PartitionOrBox; 1] = args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().ok()?;
+                Some(Cell::Dere((a,)))
+            }
+            SymbolId::Cntr => {
+                let [PartitionOrBox::Partition(a), PartitionOrBox::Partition(b)]: [PartitionOrBox;
+                    2] = args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().ok()?;
+                let [b] = b.try_into().ok()?;
+                Some(Cell::Cntr((a,), (b,)))
+            }
             _ => None,
         }
     }
@@ -84,6 +132,26 @@ impl Cell {
         match tree {
             Tree::Var(_id) => None,
             Tree::Agent(symbol, args) => Self::from_symbol_args(symbol, args),
+        }
+    }
+    pub fn to_tree(self) -> Tree {
+        match self {
+            Cell::Times(_, _) => todo!(),
+            Cell::Par(_) => todo!(),
+            Cell::One() => todo!(),
+            Cell::False(_, _) => todo!(),
+            Cell::Left(_) => todo!(),
+            Cell::Right(_) => todo!(),
+            Cell::With(_, _, _) => todo!(),
+            Cell::True(_) => todo!(),
+            Cell::Exp0(a) => Tree::Agent(SymbolId::Exp0, vec![PartitionOrBox::Box(a)]),
+            Cell::Exp1((a,), b) => Tree::Agent(
+                SymbolId::Exp1,
+                vec![PartitionOrBox::Partition(vec![a]), PartitionOrBox::Box(b)],
+            ),
+            Cell::Weak(_, _) => todo!(),
+            Cell::Dere(_) => todo!(),
+            Cell::Cntr(_, _) => todo!(),
         }
     }
 }

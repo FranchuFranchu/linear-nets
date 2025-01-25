@@ -2,6 +2,6 @@
 source: src/test.rs
 expression: "main_net.show_net(&show_agent, &mut scope, 0)"
 ---
-Par(a False(a)[
-    Times(Par(a a))(Par(c c))
+Par(c False(c)[
+    Times(Par(c c))(Par(f f))
 ])

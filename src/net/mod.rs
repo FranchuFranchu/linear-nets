@@ -53,7 +53,8 @@ pub enum SymbolId {
     Weak,
     Dere,
     Cntr,
-    Exp,
+    Exp0,
+    Exp1,
 
     All,
     Any,
@@ -67,10 +68,18 @@ impl SymbolId {
             Par => vec![Arg::Partition(2)],
             One => vec![],
             False => vec![Arg::Partition(1), Arg::Box(1)],
+
             Left => vec![Arg::Partition(1)],
             Right => vec![Arg::Partition(1)],
             With => vec![Arg::Partition(1), Arg::Box(2), Arg::Box(2)],
             True => vec![Arg::Partition(1)],
+
+            Exp0 => vec![Arg::Box(1)],
+            Exp1 => vec![Arg::Partition(1), Arg::Box(2)],
+            Weak => vec![Arg::Partition(1), Arg::Box(1)],
+            Dere => vec![Arg::Partition(1)],
+            Cntr => vec![Arg::Partition(1), Arg::Partition(1)],
+
             _ => todo!(),
         }
     }
@@ -141,7 +150,9 @@ impl Net {
         }
     }
     pub fn normal(&mut self, f: fn(&mut Net, Cell, Cell)) {
-        while self.reduce(f) {}
+        while self.reduce(f) {
+            self.print_net_simple()
+        }
     }
     pub fn link(&mut self, a: Tree, b: Tree) {
         if let Tree::Var(id) = a {
@@ -227,11 +238,11 @@ impl Net {
         built_net
     }
     fn shift_map(&self) -> impl Fn(VarId) -> VarId {
-        let vars = self.vars.len();
+        let vars = self.vars.keys().fold(0, |b, a| (*a).max(b)) + 1;
         Box::new(move |x| x + vars)
     }
     fn mix(mut self, mut other: Net) -> Net {
-        let map = |x| x + self.vars.len();
+        let map = self.shift_map();
         other.map_vars(&map);
         self.ports.append(&mut other.ports);
         self.redexes.append(&mut other.redexes);

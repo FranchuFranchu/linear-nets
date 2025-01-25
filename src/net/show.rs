@@ -18,6 +18,12 @@ impl Net {
         let show_agent = |x| format!("{:?}", x);
         println!("{}", self.show_net(&show_agent, &mut scope, 0));
     }
+
+    pub fn show_net_simple(&self) -> String {
+        let mut scope = std::collections::BTreeMap::new();
+        let show_agent = |x| format!("{:?}", x);
+        format!("{}", self.show_net(&show_agent, &mut scope, 0))
+    }
     pub fn show_net(
         &self,
         show_agent: &dyn Fn(SymbolId) -> String,

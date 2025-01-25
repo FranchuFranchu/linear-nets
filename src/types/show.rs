@@ -23,6 +23,8 @@ impl Type {
             Type::With(a, b) => {
                 format!("({} & {})", a.show(scope), b.show(scope))
             }
+            Type::Ofc(t) => format!("!{}", t.show(scope)),
+            Type::Why(t) => format!("?{}", t.show(scope)),
             Type::Var(id, invert) => pick_name(scope, *id) + if *invert { "'" } else { "" },
             Type::Hole => format!("_"),
             Type::Error => format!("Error"),

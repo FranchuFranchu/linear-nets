@@ -73,10 +73,26 @@ impl Desugarer {
             }
         }
     }
+    pub fn dealias_var(&mut self, id: usize) -> usize {
+        if let Some(id) = self.new_wired_vars.remove(&id) {
+            id
+        } else {
+            id
+        }
+    }
     pub fn desugar_instr(&mut self, instr: Instruction) {
         match instr {
             Instruction::Multicut(name, args) => {
-                let args = args.into_iter().map(|x| self.desugar(x)).collect();
+                let args = args
+                    .into_iter()
+                    .map(|x| {
+                        let Tree::Var(x) = self.desugar(x) else {
+                            unreachable!()
+                        };
+                        self.validly_declared_vars.insert(x);
+                        Tree::Var(self.dealias_var(x))
+                    })
+                    .collect();
                 self.output.push(Instruction::Multicut(name, args))
             }
             Instruction::Monocut(left @ Tree::Var(idl), right @ Tree::Var(idr)) => {
@@ -92,7 +108,7 @@ impl Desugarer {
                 self.validly_declared_vars.insert(vid);
                 let o = Instruction::Monocut(
                     Tree::Agent(aid, self.desugar_contents(args)),
-                    Tree::Var(vid),
+                    Tree::Var(self.dealias_var(vid)),
                 );
                 self.output.push(o);
             }

@@ -2,14 +2,6 @@
 source: src/test.rs
 expression: "main_net.show_net(&show_agent, &mut scope, 0)"
 ---
-With(One)[
-    b
-    False(b)[
-        One
-]
-][
-    b
-    False(b)[
-        One
-]
+Weak(False)[
+    One
 ]

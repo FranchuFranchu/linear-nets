@@ -249,6 +249,61 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                                 Type::Error
                             }
                         }
+                        Cell::Exp0(mut net) => {
+                            net.normal(crate::net::rules::apply_rule);
+
+                            let mut ports = core::mem::take(&mut net.ports);
+                            ports.iter_mut().for_each(|x| *x = net.substitute_ref(x));
+                            let Ok([mut t]): Result<[Type; 1], _> = infer(ports.into()).try_into()
+                            else {
+                                return Type::Error;
+                            };
+                            self.freshen_vars(&mut [&mut t]);
+
+                            Type::Ofc(Box::new(t))
+                        }
+                        Cell::Exp1((inp,), mut net) => {
+                            net.normal(crate::net::rules::apply_rule);
+
+                            let mut ports = core::mem::take(&mut net.ports);
+                            ports.iter_mut().for_each(|x| *x = net.substitute_ref(x));
+                            let Ok([mut t, mut inp_t]): Result<[Type; 2], _> =
+                                infer(ports.into()).try_into()
+                            else {
+                                return Type::Error;
+                            };
+                            self.freshen_vars(&mut [&mut t]);
+
+                            let other_inp_t = self.infer(inp);
+                            self.unify(other_inp_t, !inp_t);
+
+                            Type::Ofc(Box::new(t))
+                        }
+                        Cell::Weak((ctx,), mut net) => {
+                            let mut ports = core::mem::take(&mut net.ports);
+                            ports.iter_mut().for_each(|x| *x = net.substitute_ref(x));
+                            let Ok([mut t]): Result<[Type; 1], _> = infer(ports.into()).try_into()
+                            else {
+                                return Type::Error;
+                            };
+                            self.freshen_vars(&mut [&mut t]);
+
+                            let c_t = self.infer(ctx);
+
+                            self.unify(c_t, !t);
+
+                            Type::Why(Box::new(Type::Hole))
+                        }
+                        Cell::Dere((a,)) => Type::Why(Box::new(self.infer(a))),
+                        Cell::Cntr((a,), (b,)) => {
+                            let a_t = self.infer(a);
+                            let b_t = self.infer(b);
+                            if matches!((&a_t, &b_t), (Type::Why(..), Type::Why(..))) {
+                                self.unify(a_t, b_t)
+                            } else {
+                                Type::Error
+                            }
+                        }
                     }
                 }
             }

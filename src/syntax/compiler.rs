@@ -26,6 +26,11 @@ fn agent_name_to_id(s: &str) -> Option<SymbolId> {
         "With" => Some(SymbolId::With),
         "True" => Some(SymbolId::True),
 
+        "Exp0" => Some(SymbolId::Exp0),
+        "Exp1" => Some(SymbolId::Exp1),
+        "Weak" => Some(SymbolId::Weak),
+        "Dere" => Some(SymbolId::Dere),
+        "Cntr" => Some(SymbolId::Cntr),
         _ => None,
     }
 }
@@ -55,8 +60,16 @@ impl Compiler {
         // If everything was done right, there's exactly one net left.
         if self.nets.len() != 1 {
             panic!(
-                "Definition consists of more than one disconnected subnets!: \n{:?}",
-                self.nets
+                "Definition consists of more than one disconnected subnets!: \n{}",
+                {
+                    use core::fmt::Write;
+                    let mut s = String::new();
+                    for (net, wires) in self.nets.values() {
+                        writeln!(&mut s, "Net with wires: {:?}", wires).unwrap();
+                        write!(&mut s, "{}", net.show_net_simple()).unwrap();
+                    }
+                    s
+                }
             )
         }
         let (mut new_net, net_wires) = core::mem::take(&mut self.nets)
@@ -144,7 +157,10 @@ impl Compiler {
                     self.wire_to_nets.insert(a, (new_net_id, 0));
                     self.wire_to_nets.insert(b, (new_net_id, 1));
                 } else {
-                    panic!(":(")
+                    panic!(
+                        "Found var monocut that is neither a cut nor a wire: {} = {}",
+                        a, b
+                    )
                 }
             }
             (super::Tree::Agent(agent_name, args), super::Tree::Var(var_id)) => {

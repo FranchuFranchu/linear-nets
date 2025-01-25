@@ -2,4 +2,4 @@
 source: src/test.rs
 expression: "main_net.show_net(&show_agent, &mut scope, 0)"
 ---
-Par(a a)
+Par(b b)

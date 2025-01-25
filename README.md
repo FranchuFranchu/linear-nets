@@ -8,18 +8,18 @@ Reads input file from stdin.
 - [ ] Implement proof net reduction rules
   - [X] Times, Par, 1, False
   - [X] Left, Right, With, True
-  - [ ] Exp, Weak, Dere, Cntr
+  - [X] Exp, Weak, Dere, Cntr
   - [ ] All, Any
 - [ ] Implement typesystem reduction rules
   - [X] Times, Par, 1, False
   - [X] Left, Right, With, True
-  - [ ] Exp, Weak, Dere, Cntr
+  - [X] Exp, Weak, Dere, Cntr
   - [ ] All, Any
 - [X] Implement parser
 - [X] Implement AST -> Net compiler
   - [X] Implement composing nets together
 - [X] Add better displaying of nets
 - [X] Add tests
-- [ ] Interaction combinator compiler for proof net
+- [X] Interaction combinator compiler for proof net
 - [ ] Interaction combinator compiler for typesystem
-- [ ] Compiler from interaction combinators to external runtimes.
+- [X] Compiler from interaction combinators to external runtimes.

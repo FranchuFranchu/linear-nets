@@ -1,0 +1,3 @@
+Main(res) {
+    Weak(False)[One] = res
+}

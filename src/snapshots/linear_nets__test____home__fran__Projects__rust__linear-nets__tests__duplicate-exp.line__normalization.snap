@@ -1,0 +1,5 @@
+---
+source: src/test.rs
+expression: "main_net.show_net(&show_agent, &mut scope, 0)"
+---
+Par(Par(Par(Times(n)(o) Times(o)(p)) Par(n p)) Par(Par(Times(y)(z) Times(z)(aa)) Par(y aa)))
