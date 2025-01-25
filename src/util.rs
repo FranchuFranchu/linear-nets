@@ -4,6 +4,7 @@ use crate::net::VarId;
 
 pub fn number_to_string(mut number: usize) -> String {
     let mut result = String::new();
+    number += 1;
     while number > 0 {
         let remainder = (number - 1) % 26;
         let character = (b'a' + remainder as u8) as char;
@@ -16,7 +17,7 @@ pub fn pick_name(scope: &mut BTreeMap<VarId, String>, id: VarId) -> String {
     if let Some(n) = scope.get(&id) {
         return n.clone();
     }
-    let mut number = id + 1;
+    let mut number = id;
     loop {
         let result = number_to_string(number);
         if scope.values().all(|x| *x != result) {

@@ -3,6 +3,7 @@ pub mod hvm2;
 #[cfg(feature = "ivy")]
 pub mod ivy;
 pub mod net;
+pub mod encoding;
 
 use std::collections::BTreeMap;
 
