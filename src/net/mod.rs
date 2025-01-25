@@ -301,11 +301,11 @@ impl Net {
         fn substitute_mut_aux(this: &mut Net, aux: &mut PartitionOrBox) {
             match aux {
                 PartitionOrBox::Partition(a) => a.iter_mut().for_each(|x| this.substitute_mut(x)),
-                PartitionOrBox::Box(b) => {}
+                PartitionOrBox::Box(_) => {}
             }
         }
         match tree {
-            Tree::Agent(id, aux) => aux.iter_mut().for_each(|x| substitute_mut_aux(self, x)),
+            Tree::Agent(_, aux) => aux.iter_mut().for_each(|x| substitute_mut_aux(self, x)),
             s => {
                 let Tree::Var(id) = &s else { unreachable!() };
                 if let Some(Some(_)) = self.vars.get(id) {

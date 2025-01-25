@@ -1,3 +1,4 @@
+#[cfg(feature = "hvm")]
 pub mod hvm2;
 #[cfg(feature = "ivy")]
 pub mod ivy;

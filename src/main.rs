@@ -58,7 +58,9 @@ pub fn main() {
     };
 
     println!("----- parse");
-    println!("{:?}", book);
+    for net in &book {
+        println!("{}", net);
+    }
     println!("----- compile");
     compiler.compile_book(book);
 
@@ -90,8 +92,11 @@ pub fn main() {
 
     let net_icombs = icombs::Translator::translate_net(net);
     println!("---- translate to icomb");
-    println!("{:?}", net_icombs);
-    let ivy_net = icombs::hvm2::EmitHVM2::default().emit_net(net_icombs);
-    println!("---- translate to HVM1");
-    println!("{}", ivy_net.show());
+    println!("{}", net_icombs.show());
+    #[cfg(feature = "hvm")]
+    {
+        let ivy_net = icombs::hvm2::EmitHVM2::default().emit_net(net_icombs);
+        println!("---- translate to HVM1");
+        println!("{}", ivy_net.show());
+    }
 }

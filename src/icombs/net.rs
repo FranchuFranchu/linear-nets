@@ -110,4 +110,24 @@ impl Net {
             })
             .collect();
     }
+    fn show_tree(&self, t: &Tree) -> String {
+        use Tree::*;
+        match t {
+            Var(id) => format!("x{}", id),
+            Con(a, b) => format!("({} {})", self.show_tree(a), self.show_tree(b)),
+            Dup(a, b) => format!("[{} {}]", self.show_tree(a), self.show_tree(b)),
+            Era => format!("*"),
+        }
+    }
+    pub fn show(&self) -> String {
+        use core::fmt::Write;
+        let mut s = String::new();
+        for i in &self.ports {
+            write!(&mut s, "{}\n", self.show_tree(i)).unwrap();
+        }
+        for (a, b) in &self.redexes {
+            write!(&mut s, "{}~{}\n", self.show_tree(a), self.show_tree(b)).unwrap();
+        }
+        s
+    }
 }
