@@ -109,7 +109,7 @@ impl std::fmt::Display for Tree {
                 }
             }
             Tree::Var(id) => {
-                write!(f, "x{}", id)?;
+                write!(f, "{}", crate::util::number_to_string(*id))?;
             }
         };
         Ok(())

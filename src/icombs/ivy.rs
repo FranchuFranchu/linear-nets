@@ -11,7 +11,7 @@ pub struct EmitIvy {
 
 impl EmitIvy {
     fn new_var(&mut self) -> String {
-        let var = format!("x{}", self.next_free_var);
+        let var = crate::util::number_to_string(self.next_free_var);
         self.next_free_var += 1;
         var
     }

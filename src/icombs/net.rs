@@ -113,7 +113,7 @@ impl Net {
     fn show_tree(&self, t: &Tree) -> String {
         use Tree::*;
         match t {
-            Var(id) => format!("x{}", id),
+            Var(id) => crate::util::number_to_string(*id),
             Con(a, b) => format!("({} {})", self.show_tree(a), self.show_tree(b)),
             Dup(a, b) => format!("[{} {}]", self.show_tree(a), self.show_tree(b)),
             Era => format!("*"),
