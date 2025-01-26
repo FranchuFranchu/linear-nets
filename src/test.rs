@@ -30,6 +30,7 @@ fn snapshot_tests() {
 
                     // Ensure the main net is normalized correctly
                     main_net.normal(crate::net::rules::apply_rule);
+                    main_net.canonical();
                     let mut scope = std::collections::BTreeMap::new();
                     let show_agent = |x| format!("{:?}", x);
                     insta::assert_snapshot!(
@@ -50,6 +51,10 @@ fn snapshot_tests() {
                         )
                     );
                     insta::assert_snapshot!(format!("{}/typing", file.display()), result);
+
+                    let net = crate::icombs::Translator::translate_net(main_net);
+
+                    insta::assert_snapshot!(format!("{}/translation", file.display()), net.show(),);
                 }
                 Err(e) => {
                     insta::assert_snapshot!(format!("{}/compilation", file.display()), e);

@@ -1,0 +1,10 @@
+---
+source: src/test.rs
+expression: "main_net.show_net(&show_agent, &mut scope, 0)"
+---
+Exp1(Exp0[
+    Par(Par(d e) Cntr(d)(e))
+])[
+    Times(b)(Par(Par(f g) Cntr(f)(g)))
+    b
+]

@@ -42,8 +42,11 @@ impl std::ops::Not for Type {
             Type::Zero => Type::True,
             Type::Plus(a, b) => Type::Plus(Box::new(!*a), Box::new(!*b)),
             Type::With(a, b) => Type::With(Box::new(!*a), Box::new(!*b)),
+            Type::Ofc(a) => Type::Why(Box::new(!*a)),
+            Type::Why(a) => Type::Ofc(Box::new(!*a)),
             Type::Var(a, b) => Type::Var(a, !b),
             Type::Hole => Type::Hole,
+            Type::Error => Type::Error,
             _ => todo!(),
         }
     }
@@ -60,7 +63,10 @@ impl Type {
                 a.replace(k, v.clone());
                 b.replace(k, v);
             }
-            Type::One | Type::False | Type::Zero | Type::True | Type::Hole => (),
+            Type::Ofc(a) | Type::Why(a) => {
+                a.replace(k, v);
+            }
+            Type::One | Type::False | Type::Zero | Type::True | Type::Hole | Type::Error => (),
             _ => todo!(),
         }
     }
@@ -72,6 +78,9 @@ impl Type {
             Type::Times(a, b) | Type::Par(a, b) | Type::Plus(a, b) | Type::With(a, b) => {
                 a.replace_vars(f);
                 b.replace_vars(f);
+            }
+            Type::Ofc(a) | Type::Why(a) => {
+                a.replace_vars(f);
             }
             Type::One | Type::False | Type::Zero | Type::True | Type::Hole | Type::Error => (),
             _ => todo!(),
@@ -151,7 +160,10 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                     self.vars_concrete.insert((a0, !a1), !b.clone());
                     b
                 }
-                _ => Type::Error,
+                a => {
+                    eprintln!("Unification error: {:?}", a);
+                    Type::Error
+                }
             }
         }
         fn freshen_vars(&mut self, types: &mut [&mut Type]) {
@@ -278,7 +290,7 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                             self.freshen_vars(&mut [&mut t]);
 
                             let other_inp_t = self.infer(inp);
-                            self.unify(other_inp_t, !inp_t);
+                            self.unify(other_inp_t, Type::Ofc(Box::new(!inp_t)));
 
                             Type::Ofc(Box::new(t))
                         }
@@ -303,6 +315,27 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                             let b_t = self.infer(b);
                             if matches!((&a_t, &b_t), (Type::Why(..), Type::Why(..))) {
                                 self.unify(a_t, b_t)
+                            } else if let (Type::Var(a_id, a_pol), Type::Var(b_id, b_pol)) =
+                                (&a_t, &b_t)
+                            {
+                                let v1 = self.make_new_var();
+                                self.vars_concrete.insert(
+                                    (*a_id, *a_pol),
+                                    Type::Why(Box::new(Type::Var(v1, false))),
+                                );
+                                self.vars_concrete.insert(
+                                    (*a_id, !*a_pol),
+                                    !Type::Why(Box::new(Type::Var(v1, false))),
+                                );
+                                self.vars_concrete.insert(
+                                    (*b_id, *b_pol),
+                                    Type::Why(Box::new(Type::Var(v1, false))),
+                                );
+                                self.vars_concrete.insert(
+                                    (*b_id, !*b_pol),
+                                    !Type::Why(Box::new(Type::Var(v1, false))),
+                                );
+                                Type::Why(Box::new(Type::Var(v1, false)))
                             } else {
                                 Type::Error
                             }

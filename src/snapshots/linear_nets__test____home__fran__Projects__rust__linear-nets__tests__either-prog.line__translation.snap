@@ -1,0 +1,6 @@
+---
+source: src/test.rs
+expression: net.show()
+---
+a
+(a ((b b) (c c)))

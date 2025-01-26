@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: net.show()
+---
+(((i l) m) ((g j) (h k)))
+((f ((d e) f)) (d e))~((i a) (g h))
+((n (a ((b c) n))) (b c))~((l m) (j k))
