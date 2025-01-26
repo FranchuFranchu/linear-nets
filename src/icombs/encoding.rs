@@ -20,7 +20,14 @@ impl<'a> Encoder<'a> {
                 d
             }
             Tree::Era => Tree::Era,
-            Tree::Var(a) => Tree::Var(a),
+            Tree::Var(a) => {
+                if let Some(Some(a)) = self.net.vars.remove(&a) {
+                    self.encode_subtree(a)
+                } else {
+                    self.net.vars.insert(a.clone(), None);
+                    Tree::Var(a)
+                }
+            }
         }
     }
     fn merge_ctrs(&mut self, mut ports: Vec<(Tree, Tree, Tree)>) -> (Tree, Tree, Tree) {

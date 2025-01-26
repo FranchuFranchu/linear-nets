@@ -218,7 +218,7 @@ impl Compiler {
                     self.nets
                         .insert(new_net_id, (Net::graft(symbol_id, graft_args), new_vars));
                 } else {
-                    todo!();
+                    unimplemented!("Unknown symbol in monocut");
                 }
             }
             (left, right) => unreachable!("{:?} {:?}", left, right),

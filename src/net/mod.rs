@@ -213,7 +213,7 @@ impl Net {
         for (q, i) in symbol_fmt.iter().zip(args) {
             match (q, i) {
                 (Arg::Box(size), GraftArg::Box(mut net, ports)) => {
-                    assert!(*size == ports.len());
+                    assert!(*size == ports.len(), "Incorrect box free port size");
                     reorder(&mut net.ports, ports.into(), false);
                     aux.push(PartitionOrBox::Box(net));
                 }

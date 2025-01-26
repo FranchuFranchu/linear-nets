@@ -154,18 +154,34 @@ impl Translator {
                 encoding::encode_tree(&mut self.net, a)
             }
             Cell::Exp1((ctx,), ebox) => {
-                todo!();
-                /*
-                let Ok([a, ctx_inner]): Result<[ICombTree; 2], _> =
+                let Ok([contents, ctx_inner]): Result<[ICombTree; 2], _> =
                     self.translate_net_and_merge(ebox).try_into()
                 else {
                     unreachable!()
                 };
                 let ctx = self.translate_tree(ctx);
-                ICombTree::c(
+                let (a0, a1) = self.net.create_wire();
+                let (b0, b1) = self.net.create_wire();
+                let (c0, c1) = self.net.create_wire();
+                let (d0, d1) = self.net.create_wire();
+                let (e0, e1) = self.net.create_wire();
+                let (f0, f1) = self.net.create_wire();
+                let (g0, g1) = self.net.create_wire();
+                let contents = encoding::encode_tree(&mut self.net, contents);
+                println!("Encoded: {}", self.net.show_tree(&contents));
+                println!("Ctx: {}", self.net.show_tree(&ctx));
+                self.net.link(
                     ctx,
-                    encoding::encode_tree(&mut self.net, ICombTree::c(ctx_inner, a)),
-                ) */
+                    ICombTree::c(ICombTree::c(c1, ctx_inner), ICombTree::c(a1, b1)),
+                );
+                self.net.link(
+                    contents,
+                    ICombTree::c(ICombTree::c(f1, g1), ICombTree::c(d1, e1)),
+                );
+                ICombTree::c(
+                    ICombTree::c(ICombTree::c(c0, f0), g0),
+                    ICombTree::c(ICombTree::c(a0, d0), ICombTree::c(b0, e0)),
+                )
             }
             Cell::Weak((ctx,), wbox) => {
                 let Ok([c]): Result<[ICombTree; 1], _> =

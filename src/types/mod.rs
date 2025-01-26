@@ -73,7 +73,7 @@ impl Type {
                 a.replace_vars(f);
                 b.replace_vars(f);
             }
-            Type::One | Type::False | Type::Zero | Type::True | Type::Hole => (),
+            Type::One | Type::False | Type::Zero | Type::True | Type::Hole | Type::Error => (),
             _ => todo!(),
         }
     }
@@ -85,7 +85,10 @@ impl Type {
                 vs.append(&mut b.as_ref().var_set());
                 vs
             }
-            Type::One | Type::False | Type::Zero | Type::True | Type::Hole => BTreeSet::new(),
+            Type::Ofc(a) | Type::Why(a) => a.as_ref().var_set(),
+            Type::One | Type::False | Type::Zero | Type::True | Type::Hole | Type::Error => {
+                BTreeSet::new()
+            }
             _ => todo!(),
         }
     }

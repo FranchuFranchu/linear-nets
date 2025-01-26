@@ -1,0 +1,13 @@
+Dupf(out) {
+    Cntr(a)(b) = d
+    Par(a b) = c
+    Par(c d) = out
+}
+
+Main(out) {
+    Dupf(a)
+    Dupf(b)
+    Exp0[a] = d
+    Times(x)(b) = y
+    Exp1(d)[y x] = out
+}

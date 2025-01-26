@@ -1,0 +1,10 @@
+ComposeFunctions(a b out) {
+  Times(ai)(m) = a
+  Times(m)(bo) = b
+  Par(ai bo) = out
+}
+Main(res) {
+  ComposeFunctions(a)(b)(out)
+  Par(Par(a b) out) = x
+  Exp0[x] = res
+}

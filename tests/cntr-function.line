@@ -1,0 +1,5 @@
+Main(out) {
+    Cntr(a)(b) = d
+    Par(a b) = c
+    Par(c d) = out
+}

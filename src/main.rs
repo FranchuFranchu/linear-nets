@@ -77,9 +77,14 @@ pub fn main() {
     let mut scope = std::collections::BTreeMap::new();
     let show_agent = |x| format!("{:?}", x);
     print!("{}", net.show_net(&show_agent, &mut scope, 0));
-    println!("----- infer");
 
     net.canonical();
+    let mut net_icombs = icombs::Translator::translate_net(net.clone());
+    println!("---- translate to icomb");
+    println!("{}", net_icombs.show());
+    net_icombs.normal();
+    println!("{}", net_icombs.show());
+    println!("----- infer");
     let trees = net.substitute_iter(net.ports.iter());
     let types = types::infer(trees);
     let mut ctx = BTreeMap::new();
@@ -91,9 +96,6 @@ pub fn main() {
         )
     );
 
-    let net_icombs = icombs::Translator::translate_net(net);
-    println!("---- translate to icomb");
-    println!("{}", net_icombs.show());
     #[cfg(feature = "hvm")]
     {
         let hvm_net = icombs::hvm2::EmitHVM2::default().emit_net(net_icombs);

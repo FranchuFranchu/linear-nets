@@ -15,7 +15,7 @@ impl Tree {
         Tree::Con(Box::new(a), Box::new(b))
     }
     pub fn d(a: Tree, b: Tree) -> Tree {
-        Tree::Con(Box::new(a), Box::new(b))
+        Tree::Dup(Box::new(a), Box::new(b))
     }
     pub fn e() -> Tree {
         Tree::Era
@@ -121,10 +121,16 @@ impl Net {
             })
             .collect();
     }
-    fn show_tree(&self, t: &Tree) -> String {
+    pub fn show_tree(&self, t: &Tree) -> String {
         use Tree::*;
         match t {
-            Var(id) => crate::util::number_to_string(*id),
+            Var(id) => {
+                if let Some(Some(b)) = self.vars.get(id) {
+                    self.show_tree(b)
+                } else {
+                    crate::util::number_to_string(*id)
+                }
+            }
             Con(a, b) => format!("({} {})", self.show_tree(a), self.show_tree(b)),
             Dup(a, b) => format!("[{} {}]", self.show_tree(a), self.show_tree(b)),
             Era => format!("*"),
