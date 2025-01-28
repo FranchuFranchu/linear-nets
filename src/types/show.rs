@@ -25,7 +25,11 @@ impl Type {
             }
             Type::Ofc(t) => format!("!{}", t.show(scope)),
             Type::Why(t) => format!("?{}", t.show(scope)),
-            Type::Var(id, invert) => pick_name(scope, *id) + if *invert { "'" } else { "" },
+            Type::All(id, body) => format!("∀{}.{}", pick_name(scope, *id), body.show(scope)),
+            Type::Any(id, body) => format!("∃{}.{}", pick_name(scope, *id), body.show(scope)),
+            Type::Var(id, invert) | Type::Eigenvar(id, invert) => {
+                pick_name(scope, *id) + if *invert { "'" } else { "" }
+            }
             Type::Hole => format!("_"),
             Type::Error => format!("Error"),
             x => todo!("Can not show {:?}", x),

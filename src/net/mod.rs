@@ -78,9 +78,10 @@ impl SymbolId {
             Exp1 => vec![Arg::Partition(1), Arg::Box(2)],
             Weak => vec![Arg::Partition(1), Arg::Box(1)],
             Dere => vec![Arg::Partition(1)],
-            Cntr => vec![Arg::Partition(1), Arg::Partition(1)],
+            Cntr => vec![Arg::Partition(2)],
 
-            _ => todo!(),
+            All => vec![Arg::Partition(1), Arg::Box(3)],
+            Any => vec![Arg::Partition(1), Arg::Box(3)],
         }
     }
 }

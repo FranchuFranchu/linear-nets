@@ -1,4 +1,4 @@
-Theorem(res) {
+Main(res) {
     c = d
     Times(a)(c) = ac
     Times(b)(d) = bd
@@ -9,15 +9,4 @@ Theorem(res) {
     Par(vars body) = context
     False(Times(p)(q))[context] = false
     All(One)[false p q] = res
-}
-
-ExistentialThing(p q) {
-    Dere(Left(Times(One)(c))) = vars
-    Times(c)(b) = body
-    Any(p)[b vars body] = q
-}
-
-Main(res) {
-    ExistentialThing(res)(a)
-    Theorem(a)
 }

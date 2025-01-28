@@ -7,16 +7,8 @@ Reads input file from stdin.
 ## To-Do list
 
 - [X] Simple net building implementation
-- [ ] Implement proof net reduction rules
-  - [X] Times, Par, 1, False
-  - [X] Left, Right, With, True
-  - [X] Exp, Weak, Dere, Cntr
-  - [ ] All, Any
-- [ ] Implement typesystem reduction rules
-  - [X] Times, Par, 1, False
-  - [X] Left, Right, With, True
-  - [X] Exp, Weak, Dere, Cntr
-  - [ ] All, Any
+- [X] Implement proof net reduction rules
+- [X] Implement typesystem reduction rules
 - [X] Implement parser
 - [X] Implement AST -> Net compiler
   - [X] Implement composing nets together

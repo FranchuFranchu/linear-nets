@@ -73,6 +73,7 @@ impl Net {
     }
     pub fn normal(&mut self) {
         while let Some((a, b)) = self.redexes.pop_front() {
+            //println!("{}-----", self.show());
             self.interact(a, b)
         }
     }
@@ -143,7 +144,7 @@ impl Net {
             write!(&mut s, "{}\n", self.show_tree(i)).unwrap();
         }
         for (a, b) in &self.redexes {
-            write!(&mut s, "{}~{}\n", self.show_tree(a), self.show_tree(b)).unwrap();
+            write!(&mut s, "{} ~ {}\n", self.show_tree(a), self.show_tree(b)).unwrap();
         }
         s
     }

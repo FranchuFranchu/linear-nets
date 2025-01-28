@@ -1,0 +1,7 @@
+Main(out_new) {
+    Left(b) = body
+    Dere(Left(Times(a)(b))) = vars
+    Any(wire)[a vars body] = out
+    All(out2)[out Dere(Left(Times(wire)(body))) body] = out3
+    Par(out2 out3) = out_new
+}

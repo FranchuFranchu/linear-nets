@@ -7,6 +7,7 @@ pub mod net;
 
 use std::collections::BTreeMap;
 
+use crate::net::rules::identity_par_box;
 use crate::net::{Cell, Net, Tree};
 use net::Net as ICombNet;
 use net::Tree as ICombTree;
@@ -51,16 +52,17 @@ impl Translator {
                 *v
             } else {
                 let v = self.net.allocate_var_id();
-                self.net.vars.insert(v, None);
+                assert!(self.net.vars.insert(v, None).is_none());
                 map.insert(x, v);
                 v
             }
         });
-        for (k, v) in map {
-            if let Some(i) = net.vars.remove(&k) {
+        for (_, v) in map {
+            if let Some(i) = net.vars.remove(&v) {
                 self.net.vars.insert(v, i);
             }
         }
+        assert!(net.vars.is_empty());
         self.net.redexes.append(&mut net.redexes);
         core::mem::take(&mut net.ports).into()
     }
@@ -126,17 +128,18 @@ impl Translator {
                 ICombTree::Era
             }
             Cell::With((ctx,), left, right) => {
-                let Ok([cl, vl]): Result<[ICombTree; 2], _> =
+                let Ok([vl, cl]): Result<[ICombTree; 2], _> =
                     self.translate_net_and_merge(left).try_into()
                 else {
                     unreachable!()
                 };
-                let Ok([cr, vr]): Result<[ICombTree; 2], _> =
+                let Ok([vr, cr]): Result<[ICombTree; 2], _> =
                     self.translate_net_and_merge(right).try_into()
                 else {
                     unreachable!()
                 };
                 let ctx = self.translate_tree(ctx);
+
                 ICombTree::Con(
                     Box::new(ctx),
                     Box::new(ICombTree::Con(
@@ -168,8 +171,6 @@ impl Translator {
                 let (f0, f1) = self.net.create_wire();
                 let (g0, g1) = self.net.create_wire();
                 let contents = encoding::encode_tree(&mut self.net, contents);
-                println!("Encoded: {}", self.net.show_tree(&contents));
-                println!("Ctx: {}", self.net.show_tree(&ctx));
                 self.net.link(
                     ctx,
                     ICombTree::c(ICombTree::c(c1, ctx_inner), ICombTree::c(a1, b1)),
@@ -204,12 +205,49 @@ impl Translator {
                     ICombTree::c(a1, b1),
                 )
             }
-            Cell::Cntr((a,), (b,)) => {
+            Cell::Cntr((a, b)) => {
                 let a = self.translate_tree(a);
                 let b = self.translate_tree(b);
                 ICombTree::d(a, b)
             }
-            _ => todo!(),
+            Cell::All((actx,), abox) => {
+                let Ok([ctx_in, vars, body]): Result<[ICombTree; 3], _> =
+                    self.translate_net_and_merge(abox).try_into()
+                else {
+                    unreachable!()
+                };
+
+                let Ok([id]): Result<[ICombTree; 1], _> =
+                    self.translate_net_and_merge(identity_par_box()).try_into()
+                else {
+                    unreachable!()
+                };
+
+                self.net.link(id, vars);
+                let actx = self.translate_tree(actx);
+                self.net.link(ctx_in, actx);
+
+                body
+            }
+            Cell::Any((ectx,), ebox) => {
+                let Ok([ctx_in, vars, body]): Result<[ICombTree; 3], _> =
+                    self.translate_net_and_merge(ebox).try_into()
+                else {
+                    unreachable!()
+                };
+
+                let Ok([id]): Result<[ICombTree; 1], _> =
+                    self.translate_net_and_merge(identity_par_box()).try_into()
+                else {
+                    unreachable!()
+                };
+
+                self.net.link(id, vars);
+                let actx = self.translate_tree(ectx);
+                self.net.link(ctx_in, actx);
+
+                body
+            }
         }
     }
 }

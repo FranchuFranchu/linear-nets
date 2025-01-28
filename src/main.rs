@@ -79,11 +79,13 @@ pub fn main() {
     print!("{}", net.show_net(&show_agent, &mut scope, 0));
 
     net.canonical();
-    let mut net_icombs = icombs::Translator::translate_net(net.clone());
+
     println!("---- translate to icomb");
+    let mut net_icombs = icombs::Translator::translate_net(net.clone());
     println!("{}", net_icombs.show());
     net_icombs.normal();
     println!("{}", net_icombs.show());
+
     println!("----- infer");
     let trees = net.substitute_iter(net.ports.iter());
     let types = types::infer(trees);

@@ -3,5 +3,5 @@ source: src/test.rs
 expression: "main_net.show_net(&show_agent, &mut scope, 0)"
 ---
 Exp0[
-    Par(Par(d e) Cntr(d)(e))
+    Par(Times(d)(e) Cntr(d e))
 ]

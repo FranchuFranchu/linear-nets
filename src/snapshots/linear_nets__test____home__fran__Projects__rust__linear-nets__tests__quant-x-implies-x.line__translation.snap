@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: net.show()
+---
+b
+(((* (* ((* (l l)) (* (m m))))) (* *)) b) ~ ([(([c d] (e ((e (f g)) *))) (c d)) (([h i] (j (* (j (k g))))) (h i))] (f k))
+* ~ *

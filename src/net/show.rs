@@ -119,7 +119,11 @@ impl Net {
                 )
             }
             PartitionOrBox::Box(net) => {
-                format!("[\n{}]", net.show_net(show_agent, scope, indent + 1))
+                format!(
+                    "[\n{}{}]",
+                    net.show_net(show_agent, scope, indent + 1),
+                    "    ".repeat(indent),
+                )
             }
         }
     }

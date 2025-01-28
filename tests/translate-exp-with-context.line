@@ -1,6 +1,6 @@
 Dupf(out) {
-    Cntr(a)(b) = d
-    Par(a b) = c
+    Times(a)(b) = c
+    Cntr(a b) = d
     Par(c d) = out
 }
 

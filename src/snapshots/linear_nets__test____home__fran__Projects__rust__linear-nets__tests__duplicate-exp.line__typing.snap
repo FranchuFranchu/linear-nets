@@ -2,4 +2,4 @@
 source: src/test.rs
 expression: result
 ---
-|- ((((a ⊗ b) ⅋ (b' ⊗ c)) ⅋ (a' ⅋ c')) ⅋ (((d ⊗ e) ⅋ (e' ⊗ f)) ⅋ (d' ⅋ f')))
+|- ((((a ⊗ b) ⅋ (b' ⊗ c)) ⅋ (a' ⅋ c')) ⊗ (((d ⊗ e) ⅋ (e' ⊗ f)) ⅋ (d' ⅋ f')))

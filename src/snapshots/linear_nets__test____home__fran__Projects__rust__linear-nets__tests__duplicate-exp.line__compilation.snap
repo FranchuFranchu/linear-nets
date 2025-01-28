@@ -2,7 +2,7 @@
 source: src/test.rs
 expression: "main_net.show_net(&show_agent, &mut scope, 0)"
 ---
-Par(f h)
+Times(g)(h)
 Exp0[
     Par(Par(Times(f)(g) Times(g)(h)) Par(f h))
-] = Cntr(Dere(f))(Dere(h))
+] = Cntr(Dere(g) Dere(h))

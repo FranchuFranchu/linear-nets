@@ -10,7 +10,7 @@ ExpCompose(res) {
 }
 Main(out) {
     ExpCompose(c)
-    Cntr(Dere(a))(Dere(b)) = d
+    Times(a)(b) = out
+    Cntr(Dere(a) Dere(b)) = d
     c = d
-    Par(a b) = out
 }

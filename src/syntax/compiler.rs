@@ -31,6 +31,9 @@ fn agent_name_to_id(s: &str) -> Option<SymbolId> {
         "Weak" => Some(SymbolId::Weak),
         "Dere" => Some(SymbolId::Dere),
         "Cntr" => Some(SymbolId::Cntr),
+
+        "All" => Some(SymbolId::All),
+        "Any" => Some(SymbolId::Any),
         _ => None,
     }
 }
@@ -93,6 +96,7 @@ impl Compiler {
             };
             new_net.ports.push_back(m.remove(&wire).unwrap());
         }
+        assert!(m.is_empty(), "Extra wires were left!");
         self.global_nets.insert(net.name, new_net);
     }
     pub fn main_net(&mut self) -> Net {
@@ -194,7 +198,10 @@ impl Compiler {
                                     included_vars.insert(wire);
                                     addresses.push(addr);
                                 }
-                                let (net, old_wires) = self.nets.remove(&net_id.unwrap()).unwrap();
+                                let (net, old_wires) = self
+                                    .nets
+                                    .remove(&net_id.expect("No net!"))
+                                    .expect("Net for partition or box not found!");
                                 for wire in old_wires {
                                     if !included_vars.contains(&wire) {
                                         if is_box {

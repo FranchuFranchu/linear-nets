@@ -20,13 +20,17 @@ pub enum Type {
     Why(Box<Type>),
     Ofc(Box<Type>),
 
-    Any(Box<Type>),
-    All(Box<Type>),
+    Any(usize, Box<Type>),
+    All(usize, Box<Type>),
 
+    /// A propositional variable introduced in an axiom link
     Var(usize, bool),
+    /// A formula that is quantified over by a forall, and can't be unified with other variables.
+    Eigenvar(usize, bool),
+    /// A formula imṕlicitly introduced in an additive.
+    Hole,
 
     Error,
-    Hole,
 }
 
 impl std::ops::Not for Type {
@@ -40,14 +44,16 @@ impl std::ops::Not for Type {
             Type::Par(a, b) => Type::Times(Box::new(!*a), Box::new(!*b)),
             Type::True => Type::Zero,
             Type::Zero => Type::True,
-            Type::Plus(a, b) => Type::Plus(Box::new(!*a), Box::new(!*b)),
-            Type::With(a, b) => Type::With(Box::new(!*a), Box::new(!*b)),
+            Type::Plus(a, b) => Type::With(Box::new(!*a), Box::new(!*b)),
+            Type::With(a, b) => Type::Plus(Box::new(!*a), Box::new(!*b)),
             Type::Ofc(a) => Type::Why(Box::new(!*a)),
             Type::Why(a) => Type::Ofc(Box::new(!*a)),
             Type::Var(a, b) => Type::Var(a, !b),
+            Type::Eigenvar(a, b) => Type::Eigenvar(a, !b),
+            Type::All(a, b) => Type::Any(a, Box::new(!*b)),
+            Type::Any(a, b) => Type::All(a, Box::new(!*b)),
             Type::Hole => Type::Hole,
             Type::Error => Type::Error,
-            _ => todo!(),
         }
     }
 }
@@ -63,11 +69,16 @@ impl Type {
                 a.replace(k, v.clone());
                 b.replace(k, v);
             }
-            Type::Ofc(a) | Type::Why(a) => {
+            Type::Ofc(a) | Type::Why(a) | Type::All(_, a) | Type::Any(_, a) => {
                 a.replace(k, v);
             }
-            Type::One | Type::False | Type::Zero | Type::True | Type::Hole | Type::Error => (),
-            _ => todo!(),
+            Type::One
+            | Type::False
+            | Type::Zero
+            | Type::True
+            | Type::Hole
+            | Type::Error
+            | Type::Eigenvar(_, _) => (),
         }
     }
     fn replace_vars(&mut self, f: &impl Fn(usize) -> usize) {
@@ -79,7 +90,7 @@ impl Type {
                 a.replace_vars(f);
                 b.replace_vars(f);
             }
-            Type::Ofc(a) | Type::Why(a) => {
+            Type::Ofc(a) | Type::Why(a) | Type::Any(_, a) | Type::All(_, a) => {
                 a.replace_vars(f);
             }
             Type::One | Type::False | Type::Zero | Type::True | Type::Hole | Type::Error => (),
@@ -94,15 +105,17 @@ impl Type {
                 vs.append(&mut b.as_ref().var_set());
                 vs
             }
-            Type::Ofc(a) | Type::Why(a) => a.as_ref().var_set(),
-            Type::One | Type::False | Type::Zero | Type::True | Type::Hole | Type::Error => {
-                BTreeSet::new()
-            }
-            _ => todo!(),
+            Type::Ofc(a) | Type::Why(a) | Type::All(_, a) | Type::Any(_, a) => a.as_ref().var_set(),
+            Type::One
+            | Type::False
+            | Type::Zero
+            | Type::True
+            | Type::Hole
+            | Type::Error
+            | Type::Eigenvar(..) => BTreeSet::new(),
         }
     }
 }
-
 pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
     #[derive(Default)]
     struct State {
@@ -115,6 +128,28 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
             self.new_var += 1;
             self.new_var - 1
         }
+
+        pub fn var_set(&self, tree: &Type) -> BTreeSet<usize> {
+            let mut set = BTreeSet::new();
+            for i in tree.var_set() {
+                set.insert(i);
+                if let Some(i) = self.vars_concrete.get(&(i, false)) {
+                    set.append(&mut self.var_set(i))
+                }
+            }
+            set
+        }
+        pub fn make_var_concrete(&mut self, id: usize, flip: bool, b: Type) -> Type {
+            match self.vars_concrete.get(&(id, flip)) {
+                Some(a) => self.unify(a.clone(), b.clone()),
+                None => {
+                    self.vars_concrete.insert((id, flip), b.clone());
+                    self.vars_concrete.insert((id, !flip), !b.clone());
+                    b
+                }
+            }
+        }
+
         fn unify(&mut self, a: Type, b: Type) -> Type {
             match (a, b) {
                 (Type::Hole, a) => a,
@@ -139,15 +174,23 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                     Box::new(self.unify(*a0, *b0)),
                     Box::new(self.unify(*a1, *b1)),
                 ),
+                (Type::Why(a), Type::Why(b)) => Type::Why(Box::new(self.unify(*a, *b))),
+                (Type::Ofc(a), Type::Ofc(b)) => Type::Ofc(Box::new(self.unify(*a, *b))),
                 // TODO: Is this correct?
                 (Type::Var(a0, a1), Type::Var(b0, b1)) => {
+                    if a0 == b0 && a1 != b1 {
+                        return Type::Error;
+                    }
+                    if a0 == b0 {
+                        return Type::Var(a0, a1);
+                    }
                     match (
                         self.vars_concrete.get(&(a0, a1)),
                         self.vars_concrete.get(&(b0, b1)),
                     ) {
                         (Some(a), Some(b)) => self.unify(a.clone(), b.clone()),
-                        (None, Some(b)) => self.unify(Type::Var(a0, a1), b.clone()),
-                        (Some(a), None) => self.unify(a.clone(), Type::Var(b0, b1)),
+                        (None, Some(b)) => self.make_var_concrete(a0, a1, b.clone()),
+                        (Some(a), None) => self.make_var_concrete(b0, b1, a.clone()),
                         (None, None) => {
                             self.vars_concrete.insert((a0, a1), Type::Var(b0, b1));
                             self.vars_concrete.insert((a0, !a1), Type::Var(b0, !b1));
@@ -156,9 +199,7 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                     }
                 }
                 (Type::Var(a0, a1), b) | (b, Type::Var(a0, a1)) => {
-                    self.vars_concrete.insert((a0, a1), b.clone());
-                    self.vars_concrete.insert((a0, !a1), !b.clone());
-                    b
+                    self.make_var_concrete(a0, a1, b)
                 }
                 a => {
                     eprintln!("Unification error: {:?}", a);
@@ -310,7 +351,7 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                             Type::Why(Box::new(Type::Hole))
                         }
                         Cell::Dere((a,)) => Type::Why(Box::new(self.infer(a))),
-                        Cell::Cntr((a,), (b,)) => {
+                        Cell::Cntr((a, b)) => {
                             let a_t = self.infer(a);
                             let b_t = self.infer(b);
                             if matches!((&a_t, &b_t), (Type::Why(..), Type::Why(..))) {
@@ -339,6 +380,74 @@ pub fn infer(trees: Vec<Tree>) -> Vec<Type> {
                             } else {
                                 Type::Error
                             }
+                        }
+                        Cell::All((ctx,), mut net) => {
+                            net.canonical();
+                            let ports = core::mem::take(&mut net.ports);
+                            let Ok([mut ctx_in, mut vars, mut body_in]): Result<[Type; 3], _> =
+                                infer(ports.into()).try_into()
+                            else {
+                                return Type::Error;
+                            };
+                            self.freshen_vars(&mut [&mut ctx_in, &mut vars, &mut body_in]);
+                            let ctx_out = self.infer(ctx);
+
+                            let var_id = self.make_new_var();
+                            let var_t = Type::Eigenvar(var_id, false);
+                            self.unify(
+                                !vars,
+                                Type::Ofc(Box::new(Type::With(
+                                    Box::new(Type::Par(
+                                        Box::new(var_t.clone()),
+                                        Box::new(!var_t.clone()),
+                                    )),
+                                    Box::new(Type::Par(
+                                        Box::new(!var_t.clone()),
+                                        Box::new(var_t.clone()),
+                                    )),
+                                ))),
+                            );
+                            if self.var_set(&ctx_in).contains(&var_id) {
+                                eprintln!("Bad forall");
+                                return Type::Error;
+                            }
+
+                            if self.unify(!ctx_out, ctx_in) == Type::Error {
+                                return Type::Error;
+                            }
+                            Type::All(var_id, Box::new(body_in))
+                        }
+                        Cell::Any((ctx,), mut net) => {
+                            net.canonical();
+                            let ports = core::mem::take(&mut net.ports);
+                            let Ok([mut ctx_in, mut vars, mut body_in]): Result<[Type; 3], _> =
+                                infer(ports.into()).try_into()
+                            else {
+                                return Type::Error;
+                            };
+                            self.freshen_vars(&mut [&mut ctx_in, &mut vars, &mut body_in]);
+                            let ctx_out = self.infer(ctx);
+
+                            let var_id = self.make_new_var();
+                            let var_t = Type::Var(var_id, false);
+                            self.unify(
+                                !vars,
+                                Type::Ofc(Box::new(Type::With(
+                                    Box::new(Type::Par(
+                                        Box::new(var_t.clone()),
+                                        Box::new(!var_t.clone()),
+                                    )),
+                                    Box::new(Type::Par(
+                                        Box::new(!var_t.clone()),
+                                        Box::new(var_t.clone()),
+                                    )),
+                                ))),
+                            );
+
+                            if self.unify(!ctx_out, ctx_in) == Type::Error {
+                                return Type::Error;
+                            }
+                            Type::Any(var_id, Box::new(body_in))
                         }
                     }
                 }

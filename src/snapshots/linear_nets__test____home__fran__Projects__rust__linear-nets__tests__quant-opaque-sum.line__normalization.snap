@@ -1,0 +1,13 @@
+---
+source: src/test.rs
+expression: "main_net.show_net(&show_agent, &mut scope, 0)"
+---
+Par(c All(c)[
+    Any(e)[
+        d
+        Dere(Left(Times(d)(f)))
+        Left(f)
+    ]
+    Dere(Left(Times(e)(f)))
+    f
+])

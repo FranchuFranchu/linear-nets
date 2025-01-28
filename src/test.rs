@@ -12,6 +12,7 @@ fn snapshot_tests() {
         if let Ok(file) = i
             && let Ok(contents) = std::fs::read_to_string(file.clone())
         {
+            eprintln!("{}", file.display());
             let book = crate::syntax::parser::parse_file(&contents);
 
             match book {

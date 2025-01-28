@@ -14,7 +14,22 @@ pub enum Cell {
     Exp1((Tree,), Net),
     Weak((Tree,), Net),
     Dere((Tree,)),
-    Cntr((Tree,), (Tree,)),
+    Cntr((Tree, Tree)),
+
+    // All:
+    // Var out port: typed with eigenvariable, non-unifiable
+    // Var in port: Must be variable
+    // Any:
+    // Witness in port: Typed with B
+    // Witness out port: Typed with B
+    // They have 4 ports:
+    // - Context out
+    // - Context in
+    // - Var/Witness inout
+    // - Body in
+    // The last three are boxed together
+    All((Tree,), Net),
+    Any((Tree,), Net),
 }
 
 impl Cell {
@@ -116,16 +131,32 @@ impl Cell {
                 Some(Cell::Dere((a,)))
             }
             SymbolId::Cntr => {
-                let [PartitionOrBox::Partition(a), PartitionOrBox::Partition(b)]: [PartitionOrBox;
-                    2] = args.try_into().ok()?
+                let [PartitionOrBox::Partition(a)]: [PartitionOrBox; 1] = args.try_into().ok()?
                 else {
                     return None;
                 };
-                let [a] = a.try_into().ok()?;
-                let [b] = b.try_into().ok()?;
-                Some(Cell::Cntr((a,), (b,)))
+                let [a, b] = a.try_into().ok()?;
+                Some(Cell::Cntr((a, b)))
             }
-            _ => None,
+
+            SymbolId::All => {
+                let [PartitionOrBox::Partition(a), PartitionOrBox::Box(b)]: [PartitionOrBox; 2] =
+                    args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().unwrap();
+                Some(Cell::All((a,), b))
+            }
+            SymbolId::Any => {
+                let [PartitionOrBox::Partition(a), PartitionOrBox::Box(b)]: [PartitionOrBox; 2] =
+                    args.try_into().ok()?
+                else {
+                    return None;
+                };
+                let [a] = a.try_into().unwrap();
+                Some(Cell::Any((a,), b))
+            }
         }
     }
     pub fn from_tree(tree: Tree) -> Option<Cell> {
@@ -151,7 +182,9 @@ impl Cell {
             ),
             Cell::Weak(_, _) => todo!(),
             Cell::Dere(_) => todo!(),
-            Cell::Cntr(_, _) => todo!(),
+            Cell::Cntr(..) => todo!(),
+            Cell::All(..) => todo!(),
+            Cell::Any(..) => todo!(),
         }
     }
 }

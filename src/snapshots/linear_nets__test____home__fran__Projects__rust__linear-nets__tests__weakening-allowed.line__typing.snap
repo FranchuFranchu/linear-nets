@@ -2,4 +2,4 @@
 source: src/test.rs
 expression: result
 ---
-|- ?_
+|- ?_, 1

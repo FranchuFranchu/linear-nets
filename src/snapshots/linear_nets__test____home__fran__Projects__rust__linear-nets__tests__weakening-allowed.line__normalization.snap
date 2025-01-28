@@ -2,6 +2,7 @@
 source: src/test.rs
 expression: "main_net.show_net(&show_agent, &mut scope, 0)"
 ---
-Weak(False)[
+Weak(b)[
     One
 ]
+b

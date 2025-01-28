@@ -1,0 +1,11 @@
+---
+source: src/test.rs
+expression: "main_net.show_net(&show_agent, &mut scope, 0)"
+---
+All(One)[
+    False(Times(c)(d))[
+        Par(Cntr(Dere(Left(Times(k)(l))) Dere(Right(Times(i)(l)))) Par(k i))
+    ]
+    c
+    d
+]
