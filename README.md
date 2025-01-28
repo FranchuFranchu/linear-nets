@@ -17,7 +17,7 @@ Linear Logic [^1] is a substructural logic which rejects the rules of _weakening
 
 For example, this is not provable in Linear Logic.
 
-$$ \forall A . A \implies A \land A $$
+$$ \forall A . A \to A \land A $$
 
 To prove this, you'd need to somehow have a way to duplicate A. In traditional logical system, it's possible to do this with any proposition, but in linear logic, this is not possible. This means that in linear logic, propositions are similar to _resources_; if you want to use one twice, you need to make two of them.
 
