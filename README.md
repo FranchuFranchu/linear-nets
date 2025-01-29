@@ -13,13 +13,13 @@ cargo run < test.line
 
 ## Introduction
 
-Linear Logic [^1] is a substructural logic which rejects the rules of _weakening_ and _contraction_. This means that, "by default", proofs must be used _exactly once_.
+Linear logic [^1] is a substructural logic which rejects the rules of _weakening_ and _contraction_. This means that, "by default", proofs must be used _exactly once_.
 
-For example, this is not provable in Linear Logic.
+For example, this is not provable in linear logic.
 
 $$ \forall A . A \to A \land A $$
 
-To prove this, you'd need to somehow have a way to duplicate A. In traditional logical system, it's possible to do this with any proposition, but in linear logic, this is not possible. This means that in linear logic, propositions are similar to _resources_; if you want to use one twice, you need to make two of them.
+To prove this, you would need a way to duplicate A. In traditional logic systems, it's possible to do this with any proposition, but in linear logic, this is not possible. This means that in linear logic, propositions are similar to _resources_; if you want to use one twice, you must create two of them.
 
 An additional property of linear logic is that it disallows _mixing_. This guarantees independent proofs remain separate, while proofs that are joined together are guaranteed to depend on each other in a way.
 
@@ -29,13 +29,13 @@ In the last few years a lot of interaction net languages sprung up, usually base
 
 Additionally, most type systems devised for these languages are based on λ-calculus and are not as well-suited for interaction nets.
 
-This is an attempt to fix both of these problems. By writing Linear Logic proof nets as interaction nets, we can type these nets using logical formuals. The proof nets, by their construction properties, are guaranteed to be vicious-circle-free and connected, and remain so during the whole normalization process.
+This is an attempt to fix both of these problems. By writing linear logic proof nets as interaction nets, we can type these nets using logical formulas. The proof nets, by their construction properties, are guaranteed to be vicious-circle-free and connected, and remain so during the whole normalization process.
 
 Lafont has proven that any interaction system can be translated to Interaction Combinators [^3]. This is the case for proof nets too, since they too are an interaction system. We can translate proof nets to interaction combinators, and they'll behave as programs that will remain vicious-circle-free and well-typed.
 
 ## How it works:
 
-Lafont proved that interaction nets that are built according to a specific set of rules will be _simple_. Simple nets are vicious-circle-free, and simplicity is preserved by reduction. I heavily recommend reading and understand his paper first before reading this section.
+Lafont proved that interaction nets that are built according to a specific set of rules will be _simple_. Simple nets are vicious-circle-free, and simplicity is preserved by reduction. I heavily recommend reading and understanding his paper before reading this section.
 
 The simplicity operations operate on a set of nets, and return a net a result. Each net has a set of free ports.
 
@@ -52,7 +52,7 @@ Bar(z) {
 ...
 ```
 
-Each definition consists of a list of instructions, which say how to construct the net which has the wires named in the definition as free ports. Each instruction is either a simplicity opereation, or many operations bundled into one. `linear-nets` will desugar compound instructions into many instructions The order of the instructions of a definition is relevant.
+Each definition consists of a list of instructions, which say how to construct the net which has the wires named in the definition as free ports. Each instruction is either a simplicity operation, or many operations bundled into one. `linear-nets` will desugar compound instructions into multiple instructions The order of the instructions of a definition is relevant.
 
 Instructions are either _monocuts_ or _multicuts_. A monocut can either be a cut, a wire, or a graft. We'll look at multicuts later (TODO) since they're an extension.
 
@@ -76,7 +76,7 @@ For example:
 Times(a)(b) = c
 # This requires that `a` and `b` are part of the same net.
 Par(a b) = c
-# This requires that `a` is in a different net from `b` and `c`, and that `b` and `c` belong to the same net.
+# This requires that `a` be in a different net from `b` and `c`, and that `b` and `c` belong to the same net.
 # Additionally, there must be no other variables which are also free ports of the net that `b` and `c` are a part of.
 Exp1(a)[b c]
 ```
@@ -91,17 +91,18 @@ In the `tests` folder, there are many examples of `linear-nets` programs.
 
 - [X] Simple net building implementation
 - [X] Implement proof net reduction rules
-- [X] Implement typesystem reduction rules
+- [X] Implement type system reduction rules
 - [X] Implement parser
 - [X] Implement AST -> Net compiler
   - [X] Implement composing nets together
 - [X] Add better displaying of nets
 - [X] Add tests
 - [X] Interaction combinator compiler for proof net
-- [ ] Interaction combinator compiler for typesystem
+- [ ] Interaction combinator compiler for type system
 - [X] Compiler from interaction combinators to external runtimes.
 
 ## Interaction Combinator translation
+`Con` is SIC's zeta symbol, `Dup` is delta, and `Era` is epsilon.
 
 ```
 T[Times(a)(b)] = Con(T[a] T[b])
