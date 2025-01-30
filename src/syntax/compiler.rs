@@ -175,7 +175,6 @@ impl Compiler {
                     let mut new_vars = vec![var_id];
                     let mut new_index = 1;
                     let new_net_id = self.make_new_net_id();
-
                     self.wire_to_nets.insert(var_id, (new_net_id, 0));
                     use super::Argument;
                     for i in args {

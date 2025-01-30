@@ -89,17 +89,16 @@ In the `tests` folder, there are many examples of `linear-nets` programs.
 
 ## To-Do list
 
-- [X] Simple net building implementation
-- [X] Implement proof net reduction rules
-- [X] Implement type system reduction rules
-- [X] Implement parser
-- [X] Implement AST -> Net compiler
-  - [X] Implement composing nets together
-- [X] Add better displaying of nets
-- [X] Add tests
-- [X] Interaction combinator compiler for proof net
+- [X] Basic implementation
 - [ ] Interaction combinator compiler for type system
-- [X] Compiler from interaction combinators to external runtimes.
+- [ ] Research whether adding dependent types is feasible
+- [ ] Syntax refactor
+  - [ ] Add `Span`s. Nicer error reporting.
+  - [ ] Add complex parser for expressions, with precedence
+  - [ ] Add simplicity inference
+- [ ] Add module system
+- [ ] Add a way to treat external data (IO as an existential?).
+- [ ] Add REPL with typed holes, like Lean.
 
 ## Interaction Combinator translation
 `Con` is SIC's zeta symbol, `Dup` is delta, and `Era` is epsilon.

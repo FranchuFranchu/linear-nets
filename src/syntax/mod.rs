@@ -1,3 +1,9 @@
+pub struct Span {
+    pub start: usize,
+    pub end: usize,
+    pub file: String,
+}
+
 #[derive(Debug)]
 pub enum Argument {
     Partition(Vec<Tree>),
